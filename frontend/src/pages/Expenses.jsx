@@ -1,31 +1,21 @@
 import { useState, useMemo } from 'react';
 import ExpenseModal from '../modals/ExpenseModal';
 
-/* ── Sample expense data ── */
+/* ── Sample fuel expense data (matches FuelExpenseSchema) ── */
 const EXPENSES_DATA = [
-  { id: 1, driver: 'James Carter', distance: 1240, fuelExpense: 14500, miscExpense: 3200, status: 'Approved' },
-  { id: 2, driver: 'Maria Lopez', distance: 870, fuelExpense: 9800, miscExpense: 1500, status: 'Pending' },
-  { id: 3, driver: 'Raj Patel', distance: 1560, fuelExpense: 18200, miscExpense: 4800, status: 'Approved' },
-  { id: 4, driver: 'Emily Chen', distance: 640, fuelExpense: 7200, miscExpense: 900, status: 'Rejected' },
-  { id: 5, driver: 'Ahmed Hassan', distance: 2100, fuelExpense: 24500, miscExpense: 6200, status: 'Approved' },
-  { id: 6, driver: 'Luca Rossi', distance: 430, fuelExpense: 4800, miscExpense: 1200, status: 'Pending' },
-  { id: 7, driver: 'Sarah Kim', distance: 1800, fuelExpense: 21000, miscExpense: 5500, status: 'Approved' },
-  { id: 8, driver: 'David Brown', distance: 950, fuelExpense: 11200, miscExpense: 2800, status: 'Pending' },
-  { id: 9, driver: 'Anna Schmidt', distance: 1120, fuelExpense: 13100, miscExpense: 3600, status: 'Rejected' },
-  { id: 10, driver: 'Tom Wilson', distance: 760, fuelExpense: 8600, miscExpense: 2100, status: 'Approved' },
+  { id: 1, vehicleId: 'Volvo FH16', tripId: 'TRP-001', date: '2026-02-18', liters: 120, cost: 14500 },
+  { id: 2, vehicleId: 'Tata Ace Gold', tripId: 'TRP-002', date: '2026-02-17', liters: 45, cost: 5400 },
+  { id: 3, vehicleId: 'Scania R500', tripId: 'TRP-003', date: '2026-02-16', liters: 180, cost: 21600 },
+  { id: 4, vehicleId: 'Bajaj Maxima', tripId: null, date: '2026-02-15', liters: 8, cost: 960 },
+  { id: 5, vehicleId: 'MAN TGX', tripId: 'TRP-005', date: '2026-02-14', liters: 200, cost: 24000 },
+  { id: 6, vehicleId: 'Mahindra Supro', tripId: 'TRP-006', date: '2026-02-13', liters: 35, cost: 4200 },
+  { id: 7, vehicleId: 'DAF XF', tripId: 'TRP-007', date: '2026-02-12', liters: 160, cost: 19200 },
+  { id: 8, vehicleId: 'Mercedes Actros', tripId: null, date: '2026-02-11', liters: 140, cost: 16800 },
+  { id: 9, vehicleId: 'Kenworth T680', tripId: 'TRP-009', date: '2026-02-10', liters: 190, cost: 22800 },
+  { id: 10, vehicleId: 'Peterbilt 579', tripId: 'TRP-010', date: '2026-02-09', liters: 175, cost: 21000 },
 ];
 
-const STATUS_STYLES = {
-  Approved: 'bg-green-500/20 text-green-300',
-  Pending: 'bg-yellow-500/20 text-yellow-300',
-  Rejected: 'bg-red-500/20 text-red-300',
-};
 
-const STATUS_DOT = {
-  Approved: 'bg-green-400',
-  Pending: 'bg-yellow-400',
-  Rejected: 'bg-red-400',
-};
 
 /* ── Icons ── */
 const SearchIcon = () => (
@@ -62,11 +52,11 @@ function Expenses() {
     const q = search.toLowerCase();
     return EXPENSES_DATA.filter(
       (e) =>
-        e.driver.toLowerCase().includes(q) ||
-        e.status.toLowerCase().includes(q) ||
-        String(e.distance).includes(q) ||
-        String(e.fuelExpense).includes(q) ||
-        String(e.miscExpense).includes(q)
+        e.vehicleId.toLowerCase().includes(q) ||
+        (e.tripId && e.tripId.toLowerCase().includes(q)) ||
+        e.date.includes(q) ||
+        String(e.liters).includes(q) ||
+        String(e.cost).includes(q)
     );
   }, [search]);
 
@@ -79,7 +69,7 @@ function Expenses() {
       </div>
 
       {/* ── Expense Table Card ── */}
-      <div className="rounded-2xl border border-secondary/50 bg-primary/40 backdrop-blur-sm overflow-hidden">
+      <div className="rounded-2xl border border-muted/15 bg-primary/40 backdrop-blur-sm overflow-hidden">
         {/* Toolbar: search + actions */}
         <div className="p-5 pb-0 space-y-4">
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
@@ -92,8 +82,8 @@ function Expenses() {
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search drivers, expenses, status…"
-                className="w-full pl-10 pr-4 py-2.5 bg-secondary/20 border border-secondary/50 rounded-lg text-accent placeholder-muted focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition text-sm"
+                placeholder="Search vehicle, trip ID, date…"
+                className="w-full pl-10 pr-4 py-2.5 bg-muted/8 border border-muted/20 rounded-lg text-accent placeholder-muted focus:outline-none focus:ring-2 focus:ring-secondary/50 focus:border-transparent transition text-sm"
               />
             </div>
 
@@ -106,7 +96,7 @@ function Expenses() {
               ].map(({ label, Icon }) => (
                 <button
                   key={label}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-secondary/20 border border-secondary/50 rounded-lg text-sm font-medium text-muted hover:text-accent hover:bg-secondary/40 transition focus:outline-none focus:ring-2 focus:ring-accent"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-muted/8 border border-muted/20 rounded-lg text-sm font-medium text-muted hover:text-accent hover:bg-muted/15 transition focus:outline-none focus:ring-2 focus:ring-secondary/50"
                 >
                   <Icon />
                   <span className="hidden md:inline">{label}</span>
@@ -116,7 +106,7 @@ function Expenses() {
           </div>
 
           {/* Add Expense button row */}
-          <div className="flex items-center justify-between border-b border-secondary/50 pb-4">
+          <div className="flex items-center justify-between border-b border-muted/15 pb-4">
             <p className="text-sm text-muted">
               <span className="text-accent font-semibold">{filtered.length}</span> record{filtered.length !== 1 ? 's' : ''} found
             </p>
@@ -127,7 +117,7 @@ function Expenses() {
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
-              Add Expense
+              Add Fuel Expense
             </button>
           </div>
         </div>
@@ -136,40 +126,35 @@ function Expenses() {
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left">
             <thead>
-              <tr className="bg-secondary/15">
+              <tr className="bg-muted/5">
                 <th className="px-5 py-3.5 font-semibold text-muted text-xs uppercase tracking-wider text-center">Sr. No.</th>
-                <th className="px-5 py-3.5 font-semibold text-muted text-xs uppercase tracking-wider text-center">Driver</th>
-                <th className="px-5 py-3.5 font-semibold text-muted text-xs uppercase tracking-wider text-center">Distance (Km)</th>
-                <th className="px-5 py-3.5 font-semibold text-muted text-xs uppercase tracking-wider text-center">Fuel Expense</th>
-                <th className="px-5 py-3.5 font-semibold text-muted text-xs uppercase tracking-wider text-center">Misc. Expense</th>
-                <th className="px-5 py-3.5 font-semibold text-muted text-xs uppercase tracking-wider text-center">Status</th>
+                <th className="px-5 py-3.5 font-semibold text-muted text-xs uppercase tracking-wider text-center">Vehicle</th>
+                <th className="px-5 py-3.5 font-semibold text-muted text-xs uppercase tracking-wider text-center">Trip ID</th>
+                <th className="px-5 py-3.5 font-semibold text-muted text-xs uppercase tracking-wider text-center">Date</th>
+                <th className="px-5 py-3.5 font-semibold text-muted text-xs uppercase tracking-wider text-center">Liters</th>
+                <th className="px-5 py-3.5 font-semibold text-muted text-xs uppercase tracking-wider text-center">Cost</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-secondary/30">
+            <tbody className="divide-y divide-muted/10">
               {filtered.length > 0 ? (
                 filtered.map((e, idx) => (
                   <tr
                     key={e.id}
-                    className={`hover:bg-secondary/15 transition-colors ${idx % 2 === 0 ? 'bg-transparent' : 'bg-secondary/5'}`}
+                    className={`hover:bg-muted/8 transition-colors ${idx % 2 === 0 ? 'bg-transparent' : 'bg-muted/[0.03]'}`}
                   >
                     <td className="px-5 py-4 text-muted font-mono text-center">{idx + 1}</td>
                     <td className="px-5 py-4 text-center">
                       <button className="text-accent hover:underline underline-offset-2 cursor-pointer transition font-medium">
-                        {e.driver}
+                        {e.vehicleId}
                       </button>
                     </td>
-                    <td className="px-5 py-4 text-accent text-center font-mono">{e.distance.toLocaleString('en-IN')}</td>
-                    <td className="px-5 py-4 text-center">
-                      <span className="text-accent font-mono font-medium">₹{e.fuelExpense.toLocaleString('en-IN')}</span>
+                    <td className="px-5 py-4 text-muted text-center font-mono text-xs">{e.tripId || '—'}</td>
+                    <td className="px-5 py-4 text-muted text-center font-mono">
+                      {new Date(e.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
                     </td>
+                    <td className="px-5 py-4 text-accent text-center font-mono">{e.liters}</td>
                     <td className="px-5 py-4 text-center">
-                      <span className="text-accent font-mono font-medium">₹{e.miscExpense.toLocaleString('en-IN')}</span>
-                    </td>
-                    <td className="px-5 py-4 text-center">
-                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${STATUS_STYLES[e.status]}`}>
-                        <span className={`w-1.5 h-1.5 rounded-full ${STATUS_DOT[e.status]}`} />
-                        {e.status}
-                      </span>
+                      <span className="text-accent font-mono font-medium">₹{e.cost.toLocaleString('en-IN')}</span>
                     </td>
                   </tr>
                 ))
@@ -191,7 +176,7 @@ function Expenses() {
         </div>
 
         {/* ── Table footer ── */}
-        <div className="px-5 py-3.5 border-t border-secondary/30 flex items-center justify-between">
+        <div className="px-5 py-3.5 border-t border-muted/10 flex items-center justify-between">
           <p className="text-xs text-muted">
             Showing {filtered.length} of {EXPENSES_DATA.length} records
           </p>

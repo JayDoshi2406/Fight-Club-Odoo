@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useUser } from './context/UserContext';
 import VehicleModal from './modals/VehicleModal';
 import TripModal from './modals/TripModal';
 
@@ -56,7 +57,7 @@ const KPI_CARDS = [
     value: 10,
     icon: 'M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0zM13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10m10 0H3m10 0h2m4 0h1a1 1 0 001-1v-4.586a1 1 0 00-.293-.707l-3-3A1 1 0 0017.414 7H14',
     change: '+2 this week',
-    accent: 'from-secondary/60 to-secondary/20',
+    accent: 'from-secondary/15 to-secondary/5',
   },
   {
     label: 'Active Trips',
@@ -127,13 +128,15 @@ function Dashboard() {
     );
   }, [search, currentTab]);
 
+  const { user } = useUser();
+
   return (
     <div className="p-6 lg:p-8 space-y-8 max-w-350 mx-auto">
       {/* ── Welcome banner ── */}
-      <div className="relative overflow-hidden rounded-2xl bg-linear-to-r from-primary via-secondary/80 to-secondary border border-secondary/50 p-8">
+      <div className="relative overflow-hidden rounded-2xl bg-linear-to-r from-[#1e2b34] via-primary to-secondary/20 border border-muted/15 p-8">
         <div className="relative z-10">
           <h2 className="text-3xl font-bold text-accent">
-            Good {new Date().getHours() < 12 ? 'Morning' : new Date().getHours() < 17 ? 'Afternoon' : 'Evening'} 👋
+            Good {new Date().getHours() < 12 ? 'Morning' : new Date().getHours() < 17 ? 'Afternoon' : 'Evening'}{user?.name ? `, ${user.name}` : ''} 👋
           </h2>
           <p className="text-muted mt-2 text-base max-w-xl">
             Here's what's happening with your fleet today. You have{' '}
@@ -151,7 +154,7 @@ function Dashboard() {
         {KPI_CARDS.map((card) => (
           <div
             key={card.label}
-            className={`relative overflow-hidden rounded-xl border border-secondary/50 bg-linear-to-br ${card.accent} p-5 transition hover:scale-[1.02] hover:shadow-lg`}
+            className={`relative overflow-hidden rounded-xl border border-muted/15 bg-linear-to-br ${card.accent} p-5 transition hover:scale-[1.02] hover:shadow-lg`}
           >
             <div className="flex items-start justify-between">
               <div>
@@ -170,7 +173,7 @@ function Dashboard() {
       </div>
 
       {/* ── Fleet Overview Card ── */}
-      <div className="rounded-2xl border border-secondary/50 bg-primary/40 backdrop-blur-sm overflow-hidden">
+      <div className="rounded-2xl border border-muted/15 bg-primary/40 backdrop-blur-sm overflow-hidden">
         {/* Card header with search + actions */}
         <div className="p-5 pb-0 space-y-4">
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
@@ -184,7 +187,7 @@ function Dashboard() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search trips, vehicles, drivers…"
-                className="w-full pl-10 pr-4 py-2.5 bg-secondary/20 border border-secondary/50 rounded-lg text-accent placeholder-muted focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition text-sm"
+                className="w-full pl-10 pr-4 py-2.5 bg-muted/8 border border-muted/20 rounded-lg text-accent placeholder-muted focus:outline-none focus:ring-2 focus:ring-secondary/50 focus:border-transparent transition text-sm"
               />
             </div>
 
@@ -197,7 +200,7 @@ function Dashboard() {
               ].map(({ label, Icon }) => (
                 <button
                   key={label}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-secondary/20 border border-secondary/50 rounded-lg text-sm font-medium text-muted hover:text-accent hover:bg-secondary/40 transition focus:outline-none focus:ring-2 focus:ring-accent"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-muted/8 border border-muted/20 rounded-lg text-sm font-medium text-muted hover:text-accent hover:bg-muted/15 transition focus:outline-none focus:ring-2 focus:ring-secondary/50"
                 >
                   <Icon />
                   <span className="hidden md:inline">{label}</span>
@@ -207,7 +210,7 @@ function Dashboard() {
           </div>
 
           {/* ── Tabs + action buttons ── */}
-          <div className="flex items-center border-b border-secondary/50">
+          <div className="flex items-center border-b border-muted/15">
             <div className="flex items-center gap-1 flex-1 overflow-x-auto">
               {TABS.map((tab) => (
                 <button
@@ -224,7 +227,7 @@ function Dashboard() {
                     className={`ml-2 inline-flex items-center justify-center px-2 py-0.5 rounded-full text-xs font-semibold ${
                       activeTab === tab.key
                         ? 'bg-accent text-primary'
-                        : 'bg-secondary/40 text-muted'
+                        : 'bg-muted/15 text-muted'
                     }`}
                   >
                     {tab.data.length}
@@ -249,7 +252,7 @@ function Dashboard() {
               </button>
               <button
                 onClick={() => setVehicleModalOpen(true)}
-                className="inline-flex items-center gap-1.5 px-4 py-2 bg-secondary/60 text-accent text-sm font-semibold rounded-lg hover:bg-secondary/80 border border-secondary/50 transition focus:outline-none focus:ring-2 focus:ring-accent shadow-sm cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-secondary/30 text-accent text-sm font-semibold rounded-lg hover:bg-secondary/40 border border-secondary/30 transition focus:outline-none focus:ring-2 focus:ring-secondary/50 shadow-sm cursor-pointer"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -264,19 +267,19 @@ function Dashboard() {
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left">
             <thead>
-              <tr className="bg-secondary/15">
+              <tr className="bg-muted/5">
                 <th className="px-5 py-3.5 font-semibold text-muted text-xs uppercase tracking-wider text-center">Trip</th>
                 <th className="px-5 py-3.5 font-semibold text-muted text-xs uppercase tracking-wider text-center">Vehicle</th>
                 <th className="px-5 py-3.5 font-semibold text-muted text-xs uppercase tracking-wider text-center">Driver</th>
                 <th className="px-5 py-3.5 font-semibold text-muted text-xs uppercase tracking-wider text-center">Status</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-secondary/30">
+            <tbody className="divide-y divide-muted/10">
               {filtered.length > 0 ? (
                 filtered.map((row, idx) => (
                   <tr
                     key={row.trip}
-                    className={`hover:bg-secondary/15 transition-colors ${idx % 2 === 0 ? 'bg-transparent' : 'bg-secondary/5'}`}
+                    className={`hover:bg-muted/8 transition-colors ${idx % 2 === 0 ? 'bg-transparent' : 'bg-muted/[0.03]'}`}
                   >
                     <td className="px-5 py-4 text-accent font-mono font-medium text-center">#{row.trip}</td>
                     <td className="px-5 py-4 text-center">
@@ -317,7 +320,7 @@ function Dashboard() {
         </div>
 
         {/* ── Table footer ── */}
-        <div className="px-5 py-3.5 border-t border-secondary/30 flex items-center justify-between">
+        <div className="px-5 py-3.5 border-t border-muted/10 flex items-center justify-between">
           <p className="text-xs text-muted">
             Showing {filtered.length} of {currentTab.data.length} records
           </p>

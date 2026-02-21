@@ -1,9 +1,11 @@
 import { useState } from 'react';
 
 const initialForm = {
-  vehicleName: '',
-  issue: '',
+  vehicleId: '',
+  serviceType: '',
   date: '',
+  cost: '',
+  notes: '',
 };
 
 function ServiceModal({ isOpen, onClose }) {
@@ -20,9 +22,10 @@ function ServiceModal({ isOpen, onClose }) {
 
   const validate = () => {
     const newErrors = {};
-    if (!formData.vehicleName.trim()) newErrors.vehicleName = 'Vehicle name is required';
-    if (!formData.issue.trim()) newErrors.issue = 'Issue / Service is required';
+    if (!formData.vehicleId.trim()) newErrors.vehicleId = 'Vehicle is required';
+    if (!formData.serviceType.trim()) newErrors.serviceType = 'Service type is required';
     if (!formData.date) newErrors.date = 'Date is required';
+    if (!formData.cost || Number(formData.cost) <= 0) newErrors.cost = 'Valid cost is required';
     return newErrors;
   };
 
@@ -79,54 +82,91 @@ function ServiceModal({ isOpen, onClose }) {
 
         {/* ── Body ── */}
         <form onSubmit={handleSubmit} className="px-6 py-5 space-y-5 flex-1">
-          {/* Vehicle Name */}
+          {/* Vehicle (vehicleId) */}
           <div>
             <label htmlFor="s-vehicle" className="block text-sm font-medium text-accent mb-1.5">
-              Vehicle Name
+              Vehicle
             </label>
             <input
               id="s-vehicle"
-              name="vehicleName"
+              name="vehicleId"
               type="text"
-              value={formData.vehicleName}
+              value={formData.vehicleId}
               onChange={handleChange}
               placeholder="e.g. Volvo FH16"
-              className={inputClass('vehicleName')}
+              className={inputClass('vehicleId')}
             />
-            {errors.vehicleName && <p className="text-red-400 text-xs mt-1">{errors.vehicleName}</p>}
+            {errors.vehicleId && <p className="text-red-400 text-xs mt-1">{errors.vehicleId}</p>}
           </div>
 
-          {/* Issue / Service */}
+          {/* Service Type */}
           <div>
-            <label htmlFor="s-issue" className="block text-sm font-medium text-accent mb-1.5">
-              Issue / Service
+            <label htmlFor="s-serviceType" className="block text-sm font-medium text-accent mb-1.5">
+              Service Type
             </label>
             <input
-              id="s-issue"
-              name="issue"
+              id="s-serviceType"
+              name="serviceType"
               type="text"
-              value={formData.issue}
+              value={formData.serviceType}
               onChange={handleChange}
-              placeholder="e.g. Engine Oil Change"
-              className={inputClass('issue')}
+              placeholder="e.g. Oil Change"
+              className={inputClass('serviceType')}
             />
-            {errors.issue && <p className="text-red-400 text-xs mt-1">{errors.issue}</p>}
+            {errors.serviceType && <p className="text-red-400 text-xs mt-1">{errors.serviceType}</p>}
           </div>
 
-          {/* Date */}
+          {/* Date + Cost */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="s-date" className="block text-sm font-medium text-accent mb-1.5">
+                Date
+              </label>
+              <input
+                id="s-date"
+                name="date"
+                type="date"
+                value={formData.date}
+                onChange={handleChange}
+                className={`${inputClass('date')} ${!formData.date ? 'text-muted' : ''}`}
+              />
+              {errors.date && <p className="text-red-400 text-xs mt-1">{errors.date}</p>}
+            </div>
+            <div>
+              <label htmlFor="s-cost" className="block text-sm font-medium text-accent mb-1.5">
+                Cost (₹)
+              </label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted text-sm font-medium">₹</span>
+                <input
+                  id="s-cost"
+                  name="cost"
+                  type="number"
+                  min="0"
+                  value={formData.cost}
+                  onChange={handleChange}
+                  placeholder="e.g. 5000"
+                  className={`${inputClass('cost')} pl-8`}
+                />
+              </div>
+              {errors.cost && <p className="text-red-400 text-xs mt-1">{errors.cost}</p>}
+            </div>
+          </div>
+
+          {/* Notes */}
           <div>
-            <label htmlFor="s-date" className="block text-sm font-medium text-accent mb-1.5">
-              Date
+            <label htmlFor="s-notes" className="block text-sm font-medium text-accent mb-1.5">
+              Notes <span className="text-muted text-xs">(optional)</span>
             </label>
-            <input
-              id="s-date"
-              name="date"
-              type="date"
-              value={formData.date}
+            <textarea
+              id="s-notes"
+              name="notes"
+              rows={3}
+              value={formData.notes}
               onChange={handleChange}
-              className={`${inputClass('date')} ${!formData.date ? 'text-muted' : ''}`}
+              placeholder="Any additional remarks…"
+              className={`${inputClass('notes')} resize-none`}
             />
-            {errors.date && <p className="text-red-400 text-xs mt-1">{errors.date}</p>}
           </div>
         </form>
 

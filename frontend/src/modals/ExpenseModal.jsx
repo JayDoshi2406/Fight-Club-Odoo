@@ -1,10 +1,11 @@
 import { useState } from 'react';
 
 const initialForm = {
+  vehicleId: '',
   tripId: '',
-  driver: '',
-  fuelCost: '',
-  miscExpense: '',
+  date: '',
+  liters: '',
+  cost: '',
 };
 
 function ExpenseModal({ isOpen, onClose }) {
@@ -21,12 +22,12 @@ function ExpenseModal({ isOpen, onClose }) {
 
   const validate = () => {
     const newErrors = {};
-    if (!formData.tripId.trim()) newErrors.tripId = 'Trip ID is required';
-    if (!formData.driver.trim()) newErrors.driver = 'Driver name is required';
-    if (!formData.fuelCost || Number(formData.fuelCost) < 0)
-      newErrors.fuelCost = 'Valid fuel cost is required';
-    if (formData.miscExpense !== '' && Number(formData.miscExpense) < 0)
-      newErrors.miscExpense = 'Miscellaneous expense cannot be negative';
+    if (!formData.vehicleId.trim()) newErrors.vehicleId = 'Vehicle is required';
+    if (!formData.date) newErrors.date = 'Date is required';
+    if (!formData.liters || Number(formData.liters) <= 0)
+      newErrors.liters = 'Valid liters value is required';
+    if (!formData.cost || Number(formData.cost) <= 0)
+      newErrors.cost = 'Valid cost is required';
     return newErrors;
   };
 
@@ -82,79 +83,95 @@ function ExpenseModal({ isOpen, onClose }) {
 
         {/* ── Body ── */}
         <form onSubmit={handleSubmit} className="px-6 py-5 space-y-5 flex-1">
-          {/* Trip ID */}
+          {/* Vehicle (vehicleId) */}
           <div>
-            <label htmlFor="e-tripId" className="block text-sm font-medium text-accent mb-1.5">
-              Trip ID
+            <label htmlFor="e-vehicleId" className="block text-sm font-medium text-accent mb-1.5">
+              Vehicle
             </label>
             <input
-              id="e-tripId"
-              name="tripId"
+              id="e-vehicleId"
+              name="vehicleId"
               type="text"
-              value={formData.tripId}
+              value={formData.vehicleId}
               onChange={handleChange}
-              placeholder="e.g. 661f1a2b3c4d5e6f7a8b9c0d"
-              className={inputClass('tripId')}
+              placeholder="e.g. Volvo FH16"
+              className={inputClass('vehicleId')}
             />
-            {errors.tripId && <p className="text-red-400 text-xs mt-1">{errors.tripId}</p>}
+            {errors.vehicleId && <p className="text-red-400 text-xs mt-1">{errors.vehicleId}</p>}
           </div>
 
-          {/* Driver */}
-          <div>
-            <label htmlFor="e-driver" className="block text-sm font-medium text-accent mb-1.5">
-              Driver
-            </label>
-            <input
-              id="e-driver"
-              name="driver"
-              type="text"
-              value={formData.driver}
-              onChange={handleChange}
-              placeholder="e.g. James Carter"
-              className={inputClass('driver')}
-            />
-            {errors.driver && <p className="text-red-400 text-xs mt-1">{errors.driver}</p>}
-          </div>
-
-          {/* Fuel Cost + Miscellaneous Expense */}
+          {/* Trip ID (optional) + Date */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label htmlFor="e-fuel" className="block text-sm font-medium text-accent mb-1.5">
-                Fuel Cost (₹)
+              <label htmlFor="e-tripId" className="block text-sm font-medium text-accent mb-1.5">
+                Trip ID <span className="text-muted text-xs">(optional)</span>
               </label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted text-sm font-medium">₹</span>
-                <input
-                  id="e-fuel"
-                  name="fuelCost"
-                  type="number"
-                  min="0"
-                  value={formData.fuelCost}
-                  onChange={handleChange}
-                  placeholder="e.g. 12000"
-                  className={`${inputClass('fuelCost')} pl-8`}
-                />
-              </div>
-              {errors.fuelCost && <p className="text-red-400 text-xs mt-1">{errors.fuelCost}</p>}
+              <input
+                id="e-tripId"
+                name="tripId"
+                type="text"
+                value={formData.tripId}
+                onChange={handleChange}
+                placeholder="e.g. TRP-001"
+                className={inputClass('tripId')}
+              />
+              {errors.tripId && <p className="text-red-400 text-xs mt-1">{errors.tripId}</p>}
             </div>
             <div>
-              <label htmlFor="e-misc" className="block text-sm font-medium text-accent mb-1.5">
-                Miscellaneous Expense (₹)
+              <label htmlFor="e-date" className="block text-sm font-medium text-accent mb-1.5">
+                Date
+              </label>
+              <input
+                id="e-date"
+                name="date"
+                type="date"
+                value={formData.date}
+                onChange={handleChange}
+                className={`${inputClass('date')} ${!formData.date ? 'text-muted' : ''}`}
+              />
+              {errors.date && <p className="text-red-400 text-xs mt-1">{errors.date}</p>}
+            </div>
+          </div>
+
+          {/* Liters + Cost */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="e-liters" className="block text-sm font-medium text-accent mb-1.5">
+                Liters
+              </label>
+              <div className="relative">
+                <input
+                  id="e-liters"
+                  name="liters"
+                  type="number"
+                  min="0"
+                  value={formData.liters}
+                  onChange={handleChange}
+                  placeholder="e.g. 120"
+                  className={`${inputClass('liters')} pr-10`}
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted text-xs font-medium">L</span>
+              </div>
+              {errors.liters && <p className="text-red-400 text-xs mt-1">{errors.liters}</p>}
+            </div>
+            <div>
+              <label htmlFor="e-cost" className="block text-sm font-medium text-accent mb-1.5">
+                Cost (₹)
               </label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted text-sm font-medium">₹</span>
                 <input
-                  id="e-misc"
-                  name="miscExpense"
+                  id="e-cost"
+                  name="cost"
                   type="number"
                   min="0"
-                  value={formData.miscExpense}
+                  value={formData.cost}
                   onChange={handleChange}
-                  placeholder="e.g. 2500"
-                  className={`${inputClass('miscExpense')} pl-8`}
+                  placeholder="e.g. 14500"
+                  className={`${inputClass('cost')} pl-8`}
                 />
               </div>
-              {errors.miscExpense && <p className="text-red-400 text-xs mt-1">{errors.miscExpense}</p>}
+              {errors.cost && <p className="text-red-400 text-xs mt-1">{errors.cost}</p>}
             </div>
           </div>
         </form>
@@ -173,7 +190,7 @@ function ExpenseModal({ isOpen, onClose }) {
             onClick={handleSubmit}
             className="px-5 py-2.5 bg-accent text-primary text-sm font-semibold rounded-lg hover:bg-muted transition focus:outline-none focus:ring-2 focus:ring-accent"
           >
-            Add Expense
+            Add Fuel Expense
           </button>
         </div>
       </div>

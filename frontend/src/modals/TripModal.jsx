@@ -1,33 +1,15 @@
 import { useState } from 'react';
 
-const INDIAN_CITIES = [
-  'Agartala', 'Agra', 'Ahmedabad', 'Aizawl', 'Ajmer', 'Aligarh', 'Allahabad', 'Amravati', 'Amritsar', 'Anantapur',
-  'Aurangabad', 'Ayodhya', 'Bangalore', 'Bareilly', 'Bathinda', 'Belgaum', 'Bellary', 'Bhopal', 'Bhubaneswar', 'Bikaner',
-  'Bilaspur', 'Bokaro', 'Chandigarh', 'Chennai', 'Coimbatore', 'Cuttack', 'Darbhanga', 'Davangere', 'Dehradun', 'Delhi',
-  'Dhanbad', 'Dharwad', 'Dindigul', 'Durg', 'Durgapur', 'Erode', 'Faridabad', 'Firozabad', 'Gandhinagar', 'Gangtok',
-  'Gaya', 'Ghaziabad', 'Gorakhpur', 'Gulbarga', 'Guntur', 'Gurgaon', 'Guwahati', 'Gwalior', 'Haridwar', 'Hubli',
-  'Hyderabad', 'Imphal', 'Indore', 'Itanagar', 'Jabalpur', 'Jaipur', 'Jalandhar', 'Jalgaon', 'Jammu', 'Jamshedpur',
-  'Jhansi', 'Jodhpur', 'Junagadh', 'Kakinada', 'Kalyan', 'Kanpur', 'Karimnagar', 'Karnal', 'Kochi', 'Kolhapur',
-  'Kolkata', 'Kollam', 'Kota', 'Kottayam', 'Kozhikode', 'Kurnool', 'Latur', 'Lucknow', 'Ludhiana', 'Madurai',
-  'Malegaon', 'Mangalore', 'Mathura', 'Meerut', 'Moradabad', 'Mumbai', 'Muzaffarnagar', 'Muzaffarpur', 'Mysore', 'Nagpur',
-  'Nanded', 'Nashik', 'Navi Mumbai', 'Nellore', 'New Delhi', 'Nizamabad', 'Noida', 'Panaji', 'Panipat', 'Patiala',
-  'Patna', 'Pondicherry', 'Pune', 'Raipur', 'Rajahmundry', 'Rajkot', 'Ranchi', 'Ratlam', 'Rohtak', 'Rourkela',
-  'Saharanpur', 'Salem', 'Sangli', 'Satara', 'Shillong', 'Shimla', 'Siliguri', 'Solapur', 'Sonipat', 'Srinagar',
-  'Surat', 'Thanjavur', 'Thane', 'Thiruvananthapuram', 'Thrissur', 'Tiruchirappalli', 'Tirunelveli', 'Tirupati', 'Tiruppur', 'Tumkur',
-  'Udaipur', 'Ujjain', 'Vadodara', 'Varanasi', 'Vasai-Virar', 'Vellore', 'Vijayawada', 'Visakhapatnam', 'Warangal', 'Yavatmal',
-];
-
 const initialForm = {
-  region: '',
-  distance: '',
+  vehicleId: '',
+  driverId: '',
   cargoWeight: '',
+  startOdometer: '',
 };
 
 function TripModal({ isOpen, onClose }) {
   const [formData, setFormData] = useState(initialForm);
   const [errors, setErrors] = useState({});
-  const [citySearch, setCitySearch] = useState('');
-  const [dropdownOpen, setDropdownOpen] = useState(false);
 
   if (!isOpen) return null;
 
@@ -37,24 +19,14 @@ function TripModal({ isOpen, onClose }) {
     if (errors[name]) setErrors((prev) => ({ ...prev, [name]: '' }));
   };
 
-  const handleCitySelect = (city) => {
-    setFormData((prev) => ({ ...prev, region: city }));
-    setCitySearch('');
-    setDropdownOpen(false);
-    if (errors.region) setErrors((prev) => ({ ...prev, region: '' }));
-  };
-
-  const filteredCities = INDIAN_CITIES.filter((city) =>
-    city.toLowerCase().includes(citySearch.toLowerCase())
-  );
-
   const validate = () => {
     const newErrors = {};
-    if (!formData.region) newErrors.region = 'Region is required';
-    if (!formData.distance || Number(formData.distance) <= 0)
-      newErrors.distance = 'Valid distance is required';
+    if (!formData.vehicleId.trim()) newErrors.vehicleId = 'Vehicle is required';
+    if (!formData.driverId.trim()) newErrors.driverId = 'Driver is required';
     if (!formData.cargoWeight || Number(formData.cargoWeight) <= 0)
       newErrors.cargoWeight = 'Valid cargo weight is required';
+    if (formData.startOdometer !== '' && Number(formData.startOdometer) < 0)
+      newErrors.startOdometer = 'Start odometer cannot be negative';
     return newErrors;
   };
 
@@ -68,14 +40,12 @@ function TripModal({ isOpen, onClose }) {
     // TODO: API call to create trip
     console.log('New Trip:', formData);
     setFormData(initialForm);
-    setCitySearch('');
     setErrors({});
     onClose();
   };
 
   const handleBackdropClick = (e) => {
     if (e.target === e.currentTarget) {
-      setDropdownOpen(false);
       onClose();
     }
   };
@@ -114,118 +84,84 @@ function TripModal({ isOpen, onClose }) {
 
         {/* ── Body ── */}
         <form onSubmit={handleSubmit} className="px-6 py-5 space-y-5 overflow-visible">
-          {/* Region (searchable dropdown) */}
-          <div className="relative">
-            <label htmlFor="t-region" className="block text-sm font-medium text-accent mb-1.5">
-              Region (City)
+          {/* Vehicle (vehicleId) */}
+          <div>
+            <label htmlFor="t-vehicleId" className="block text-sm font-medium text-accent mb-1.5">
+              Vehicle
             </label>
-            <div
-              className={`flex items-center ${inputClass('region')} cursor-pointer`}
-              onClick={() => setDropdownOpen((prev) => !prev)}
-            >
-              {formData.region ? (
-                <span className="flex-1 text-accent">{formData.region}</span>
-              ) : (
-                <span className="flex-1 text-muted">Select a city</span>
-              )}
-              <svg
-                className={`w-4 h-4 text-muted transition-transform ${dropdownOpen ? 'rotate-180' : ''}`}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </div>
+            <input
+              id="t-vehicleId"
+              name="vehicleId"
+              type="text"
+              value={formData.vehicleId}
+              onChange={handleChange}
+              placeholder="e.g. Volvo FH16"
+              className={inputClass('vehicleId')}
+            />
+            {errors.vehicleId && <p className="text-red-400 text-xs mt-1">{errors.vehicleId}</p>}
+          </div>
 
-            {dropdownOpen && (
-              <div className="absolute z-60 mt-1 w-full bg-primary border border-secondary rounded-lg shadow-xl max-h-60 flex flex-col overflow-hidden">
-                {/* Search inside dropdown */}
-                <div className="p-2 border-b border-secondary/50">
-                  <input
-                    type="text"
-                    value={citySearch}
-                    onChange={(e) => setCitySearch(e.target.value)}
-                    placeholder="Search cities…"
-                    className="w-full px-3 py-2 bg-secondary/30 border border-secondary/50 rounded-md text-accent placeholder-muted text-sm focus:outline-none focus:ring-1 focus:ring-accent"
-                    autoFocus
-                    onClick={(e) => e.stopPropagation()}
-                  />
-                </div>
-                {/* City list */}
-                <ul className="overflow-y-auto flex-1">
-                  {filteredCities.length > 0 ? (
-                    filteredCities.map((city) => (
-                      <li key={city}>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleCitySelect(city);
-                          }}
-                          className={`w-full text-left px-4 py-2.5 text-sm transition hover:bg-secondary/30 ${
-                            formData.region === city
-                              ? 'text-accent bg-secondary/20 font-medium'
-                              : 'text-muted'
-                          }`}
-                        >
-                          {city}
-                        </button>
-                      </li>
-                    ))
-                  ) : (
-                    <li className="px-4 py-3 text-muted text-sm text-center">No cities found</li>
-                  )}
-                </ul>
+          {/* Driver (driverId) */}
+          <div>
+            <label htmlFor="t-driverId" className="block text-sm font-medium text-accent mb-1.5">
+              Driver
+            </label>
+            <input
+              id="t-driverId"
+              name="driverId"
+              type="text"
+              value={formData.driverId}
+              onChange={handleChange}
+              placeholder="e.g. Arjun Mehta"
+              className={inputClass('driverId')}
+            />
+            {errors.driverId && <p className="text-red-400 text-xs mt-1">{errors.driverId}</p>}
+          </div>
+
+          {/* Cargo Weight + Start Odometer */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="t-cargoWeight" className="block text-sm font-medium text-accent mb-1.5">
+                Cargo Weight (Kg)
+              </label>
+              <div className="relative">
+                <input
+                  id="t-cargoWeight"
+                  name="cargoWeight"
+                  type="number"
+                  min="0"
+                  value={formData.cargoWeight}
+                  onChange={handleChange}
+                  placeholder="e.g. 5000"
+                  className={`${inputClass('cargoWeight')} pr-14`}
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted text-xs font-medium">
+                  Kg
+                </span>
               </div>
-            )}
-            {errors.region && <p className="text-red-400 text-xs mt-1">{errors.region}</p>}
-          </div>
-
-          {/* Distance */}
-          <div>
-            <label htmlFor="t-distance" className="block text-sm font-medium text-accent mb-1.5">
-              Distance to Travel (kms)
-            </label>
-            <div className="relative">
-              <input
-                id="t-distance"
-                name="distance"
-                type="number"
-                min="0"
-                value={formData.distance}
-                onChange={handleChange}
-                placeholder="e.g. 450"
-                className={`${inputClass('distance')} pr-14`}
-              />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted text-xs font-medium">
-                kms
-              </span>
+              {errors.cargoWeight && <p className="text-red-400 text-xs mt-1">{errors.cargoWeight}</p>}
             </div>
-            {errors.distance && <p className="text-red-400 text-xs mt-1">{errors.distance}</p>}
-          </div>
-
-          {/* Cargo Weight */}
-          <div>
-            <label htmlFor="t-weight" className="block text-sm font-medium text-accent mb-1.5">
-              Cargo Weight (kgs)
-            </label>
-            <div className="relative">
-              <input
-                id="t-weight"
-                name="cargoWeight"
-                type="number"
-                min="0"
-                value={formData.cargoWeight}
-                onChange={handleChange}
-                placeholder="e.g. 5000"
-                className={`${inputClass('cargoWeight')} pr-14`}
-              />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted text-xs font-medium">
-                kgs
-              </span>
+            <div>
+              <label htmlFor="t-startOdometer" className="block text-sm font-medium text-accent mb-1.5">
+                Start Odometer (Km)
+              </label>
+              <div className="relative">
+                <input
+                  id="t-startOdometer"
+                  name="startOdometer"
+                  type="number"
+                  min="0"
+                  value={formData.startOdometer}
+                  onChange={handleChange}
+                  placeholder="e.g. 45200"
+                  className={`${inputClass('startOdometer')} pr-14`}
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted text-xs font-medium">
+                  Km
+                </span>
+              </div>
+              {errors.startOdometer && <p className="text-red-400 text-xs mt-1">{errors.startOdometer}</p>}
             </div>
-            {errors.cargoWeight && <p className="text-red-400 text-xs mt-1">{errors.cargoWeight}</p>}
           </div>
         </form>
 

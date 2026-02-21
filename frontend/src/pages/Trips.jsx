@@ -1,20 +1,20 @@
 import { useState, useMemo } from 'react';
 import TripModal from '../modals/TripModal';
 
-/* ── Sample trip data ── */
+/* ── Sample trip data (matches TripSchema) ── */
 const TRIPS_DATA = [
-  { id: 1, fleetType: 'Truck', origin: 'Mumbai', destination: 'Delhi', status: 'Dispatched' },
-  { id: 2, fleetType: 'Van', origin: 'Bangalore', destination: 'Chennai', status: 'Draft' },
-  { id: 3, fleetType: 'Truck', origin: 'Kolkata', destination: 'Patna', status: 'Completed' },
-  { id: 4, fleetType: 'Bike', origin: 'Jaipur', destination: 'Ajmer', status: 'Cancelled' },
-  { id: 5, fleetType: 'Truck', origin: 'Hyderabad', destination: 'Visakhapatnam', status: 'Dispatched' },
-  { id: 6, fleetType: 'Van', origin: 'Pune', destination: 'Nashik', status: 'Draft' },
-  { id: 7, fleetType: 'Truck', origin: 'Ahmedabad', destination: 'Surat', status: 'Completed' },
-  { id: 8, fleetType: 'Bike', origin: 'Lucknow', destination: 'Kanpur', status: 'Dispatched' },
-  { id: 9, fleetType: 'Van', origin: 'Chennai', destination: 'Coimbatore', status: 'Completed' },
-  { id: 10, fleetType: 'Truck', origin: 'Delhi', destination: 'Chandigarh', status: 'Draft' },
-  { id: 11, fleetType: 'Truck', origin: 'Indore', destination: 'Bhopal', status: 'Dispatched' },
-  { id: 12, fleetType: 'Van', origin: 'Kochi', destination: 'Thiruvananthapuram', status: 'Cancelled' },
+  { id: 1, vehicleId: 'Volvo FH16', driverId: 'Arjun Mehta', cargoWeight: 12000, status: 'Dispatched', startOdometer: 45200, finalOdometer: null, dispatchedAt: '2026-02-18T08:30:00Z', completedAt: null },
+  { id: 2, vehicleId: 'Tata Ace Gold', driverId: 'Priya Sharma', cargoWeight: 800, status: 'Draft', startOdometer: null, finalOdometer: null, dispatchedAt: null, completedAt: null },
+  { id: 3, vehicleId: 'Scania R500', driverId: 'Vikram Singh', cargoWeight: 18500, status: 'Completed', startOdometer: 78000, finalOdometer: 79450, dispatchedAt: '2026-02-10T06:00:00Z', completedAt: '2026-02-12T18:30:00Z' },
+  { id: 4, vehicleId: 'Bajaj Maxima', driverId: 'Neha Gupta', cargoWeight: 350, status: 'Cancelled', startOdometer: null, finalOdometer: null, dispatchedAt: null, completedAt: null },
+  { id: 5, vehicleId: 'MAN TGX', driverId: 'Ravi Kumar', cargoWeight: 22000, status: 'Dispatched', startOdometer: 112500, finalOdometer: null, dispatchedAt: '2026-02-17T05:15:00Z', completedAt: null },
+  { id: 6, vehicleId: 'Mahindra Supro', driverId: 'Anita Desai', cargoWeight: 600, status: 'Draft', startOdometer: null, finalOdometer: null, dispatchedAt: null, completedAt: null },
+  { id: 7, vehicleId: 'DAF XF', driverId: 'Suresh Patel', cargoWeight: 15000, status: 'Completed', startOdometer: 64200, finalOdometer: 65800, dispatchedAt: '2026-02-08T07:00:00Z', completedAt: '2026-02-09T22:45:00Z' },
+  { id: 8, vehicleId: 'Bajaj Maxima', driverId: 'Meera Nair', cargoWeight: 280, status: 'Dispatched', startOdometer: 15600, finalOdometer: null, dispatchedAt: '2026-02-19T09:00:00Z', completedAt: null },
+  { id: 9, vehicleId: 'Mahindra Supro', driverId: 'Kiran Joshi', cargoWeight: 750, status: 'Completed', startOdometer: 32000, finalOdometer: 32480, dispatchedAt: '2026-02-05T10:30:00Z', completedAt: '2026-02-05T18:00:00Z' },
+  { id: 10, vehicleId: 'Mercedes Actros', driverId: 'Deepak Rao', cargoWeight: 20000, status: 'Draft', startOdometer: null, finalOdometer: null, dispatchedAt: null, completedAt: null },
+  { id: 11, vehicleId: 'Kenworth T680', driverId: 'Arjun Mehta', cargoWeight: 24000, status: 'Dispatched', startOdometer: 98700, finalOdometer: null, dispatchedAt: '2026-02-20T04:00:00Z', completedAt: null },
+  { id: 12, vehicleId: 'Tata Ace Gold', driverId: 'Priya Sharma', cargoWeight: 900, status: 'Cancelled', startOdometer: null, finalOdometer: null, dispatchedAt: null, completedAt: null },
 ];
 
 const STATUS_STYLES = {
@@ -31,11 +31,7 @@ const STATUS_DOT = {
   Cancelled: 'bg-red-400',
 };
 
-const FLEET_TYPE_STYLES = {
-  Truck: 'bg-indigo-500/20 text-indigo-300',
-  Van: 'bg-teal-500/20 text-teal-300',
-  Bike: 'bg-orange-500/20 text-orange-300',
-};
+
 
 /* ── Icons ── */
 const SearchIcon = () => (
@@ -72,9 +68,9 @@ function Trips() {
     const q = search.toLowerCase();
     return TRIPS_DATA.filter(
       (t) =>
-        t.fleetType.toLowerCase().includes(q) ||
-        t.origin.toLowerCase().includes(q) ||
-        t.destination.toLowerCase().includes(q) ||
+        t.vehicleId.toLowerCase().includes(q) ||
+        t.driverId.toLowerCase().includes(q) ||
+        String(t.cargoWeight).includes(q) ||
         t.status.toLowerCase().includes(q)
     );
   }, [search]);
@@ -88,7 +84,7 @@ function Trips() {
       </div>
 
       {/* ── Trip Table Card ── */}
-      <div className="rounded-2xl border border-secondary/50 bg-primary/40 backdrop-blur-sm overflow-hidden">
+      <div className="rounded-2xl border border-muted/15 bg-primary/40 backdrop-blur-sm overflow-hidden">
         {/* Toolbar: search + actions */}
         <div className="p-5 pb-0 space-y-4">
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
@@ -101,8 +97,8 @@ function Trips() {
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search trips, fleet type, origin, destination…"
-                className="w-full pl-10 pr-4 py-2.5 bg-secondary/20 border border-secondary/50 rounded-lg text-accent placeholder-muted focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition text-sm"
+                placeholder="Search vehicle, driver, cargo weight, status…"
+                className="w-full pl-10 pr-4 py-2.5 bg-muted/8 border border-muted/20 rounded-lg text-accent placeholder-muted focus:outline-none focus:ring-2 focus:ring-secondary/50 focus:border-transparent transition text-sm"
               />
             </div>
 
@@ -115,7 +111,7 @@ function Trips() {
               ].map(({ label, Icon }) => (
                 <button
                   key={label}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-secondary/20 border border-secondary/50 rounded-lg text-sm font-medium text-muted hover:text-accent hover:bg-secondary/40 transition focus:outline-none focus:ring-2 focus:ring-accent"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-muted/8 border border-muted/20 rounded-lg text-sm font-medium text-muted hover:text-accent hover:bg-muted/15 transition focus:outline-none focus:ring-2 focus:ring-secondary/50"
                 >
                   <Icon />
                   <span className="hidden md:inline">{label}</span>
@@ -125,7 +121,7 @@ function Trips() {
           </div>
 
           {/* New Trip button row */}
-          <div className="flex items-center justify-between border-b border-secondary/50 pb-4">
+          <div className="flex items-center justify-between border-b border-muted/15 pb-4">
             <p className="text-sm text-muted">
               <span className="text-accent font-semibold">{filtered.length}</span> trip{filtered.length !== 1 ? 's' : ''} found
             </p>
@@ -145,40 +141,48 @@ function Trips() {
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left">
             <thead>
-              <tr className="bg-secondary/15">
+              <tr className="bg-muted/5">
                 <th className="px-5 py-3.5 font-semibold text-muted text-xs uppercase tracking-wider text-center">Sr. No.</th>
-                <th className="px-5 py-3.5 font-semibold text-muted text-xs uppercase tracking-wider text-center">Fleet Type</th>
-                <th className="px-5 py-3.5 font-semibold text-muted text-xs uppercase tracking-wider text-center">Origin</th>
-                <th className="px-5 py-3.5 font-semibold text-muted text-xs uppercase tracking-wider text-center">Destination</th>
+                <th className="px-5 py-3.5 font-semibold text-muted text-xs uppercase tracking-wider text-center">Vehicle</th>
+                <th className="px-5 py-3.5 font-semibold text-muted text-xs uppercase tracking-wider text-center">Driver</th>
+                <th className="px-5 py-3.5 font-semibold text-muted text-xs uppercase tracking-wider text-center">Cargo (Kg)</th>
+                <th className="px-5 py-3.5 font-semibold text-muted text-xs uppercase tracking-wider text-center">Start Odo</th>
+                <th className="px-5 py-3.5 font-semibold text-muted text-xs uppercase tracking-wider text-center">Final Odo</th>
                 <th className="px-5 py-3.5 font-semibold text-muted text-xs uppercase tracking-wider text-center">Status</th>
+                <th className="px-5 py-3.5 font-semibold text-muted text-xs uppercase tracking-wider text-center">Dispatched At</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-secondary/30">
+            <tbody className="divide-y divide-muted/10">
               {filtered.length > 0 ? (
                 filtered.map((t, idx) => (
                   <tr
                     key={t.id}
-                    className={`hover:bg-secondary/15 transition-colors ${idx % 2 === 0 ? 'bg-transparent' : 'bg-secondary/5'}`}
+                    className={`hover:bg-muted/8 transition-colors ${idx % 2 === 0 ? 'bg-transparent' : 'bg-muted/[0.03]'}`}
                   >
                     <td className="px-5 py-4 text-muted font-mono text-center">{idx + 1}</td>
                     <td className="px-5 py-4 text-center">
-                      <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${FLEET_TYPE_STYLES[t.fleetType]}`}>
-                        {t.fleetType}
-                      </span>
+                      <button className="text-accent hover:underline underline-offset-2 cursor-pointer transition font-medium">
+                        {t.vehicleId}
+                      </button>
                     </td>
-                    <td className="px-5 py-4 text-accent text-center font-medium">{t.origin}</td>
-                    <td className="px-5 py-4 text-accent text-center font-medium">{t.destination}</td>
+                    <td className="px-5 py-4 text-accent text-center font-medium">{t.driverId}</td>
+                    <td className="px-5 py-4 text-accent text-center font-mono">{t.cargoWeight.toLocaleString('en-IN')}</td>
+                    <td className="px-5 py-4 text-muted text-center font-mono">{t.startOdometer != null ? t.startOdometer.toLocaleString('en-IN') : '—'}</td>
+                    <td className="px-5 py-4 text-muted text-center font-mono">{t.finalOdometer != null ? t.finalOdometer.toLocaleString('en-IN') : '—'}</td>
                     <td className="px-5 py-4 text-center">
                       <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${STATUS_STYLES[t.status]}`}>
                         <span className={`w-1.5 h-1.5 rounded-full ${STATUS_DOT[t.status]}`} />
                         {t.status}
                       </span>
                     </td>
+                    <td className="px-5 py-4 text-muted text-center text-xs font-mono">
+                      {t.dispatchedAt ? new Date(t.dispatchedAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}
+                    </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan={5} className="px-5 py-14 text-center">
+                  <td colSpan={8} className="px-5 py-14 text-center">
                     <div className="flex flex-col items-center gap-2">
                       <svg className="w-10 h-10 text-muted/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z" />
@@ -194,7 +198,7 @@ function Trips() {
         </div>
 
         {/* ── Table footer ── */}
-        <div className="px-5 py-3.5 border-t border-secondary/30 flex items-center justify-between">
+        <div className="px-5 py-3.5 border-t border-muted/10 flex items-center justify-between">
           <p className="text-xs text-muted">
             Showing {filtered.length} of {TRIPS_DATA.length} trips
           </p>

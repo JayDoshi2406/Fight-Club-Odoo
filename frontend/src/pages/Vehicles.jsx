@@ -3,16 +3,16 @@ import VehicleModal from '../modals/VehicleModal';
 
 /* ── Sample vehicle data ── */
 const VEHICLES_DATA = [
-  { id: 1, name: 'Volvo FH16', model: 'FH16 2024', licensePlate: 'KA-01-AB-1234', vehicleType: 'Truck', region: 'Bangalore', capacity: 16000, odometer: 45200, status: 'Available' },
-  { id: 2, name: 'Scania R500', model: 'R500 2023', licensePlate: 'MH-02-CD-5678', vehicleType: 'Truck', region: 'Mumbai', capacity: 18000, odometer: 62300, status: 'On Trip' },
-  { id: 3, name: 'MAN TGX', model: 'TGX 2022', licensePlate: 'DL-03-EF-9012', vehicleType: 'Truck', region: 'Delhi', capacity: 15000, odometer: 78500, status: 'In Shop' },
-  { id: 4, name: 'DAF XF', model: 'XF 2024', licensePlate: 'TN-04-GH-3456', vehicleType: 'Truck', region: 'Chennai', capacity: 14000, odometer: 31200, status: 'On Trip' },
-  { id: 5, name: 'Mercedes Actros', model: 'Actros 2023', licensePlate: 'GJ-05-IJ-7890', vehicleType: 'Truck', region: 'Ahmedabad', capacity: 20000, odometer: 55800, status: 'Available' },
-  { id: 6, name: 'Tata Ace Gold', model: 'Ace Gold 2024', licensePlate: 'KA-06-KL-1122', vehicleType: 'Van', region: 'Pune', capacity: 1000, odometer: 12400, status: 'Available' },
-  { id: 7, name: 'Mahindra Supro', model: 'Supro 2023', licensePlate: 'RJ-07-MN-3344', vehicleType: 'Van', region: 'Jaipur', capacity: 800, odometer: 28900, status: 'On Trip' },
-  { id: 8, name: 'Bajaj Maxima', model: 'Maxima C 2024', licensePlate: 'UP-08-OP-5566', vehicleType: 'Bike', region: 'Lucknow', capacity: 500, odometer: 8700, status: 'Out of Service' },
-  { id: 9, name: 'Kenworth T680', model: 'T680 2023', licensePlate: 'AP-09-QR-7788', vehicleType: 'Truck', region: 'Hyderabad', capacity: 22000, odometer: 91400, status: 'On Trip' },
-  { id: 10, name: 'Peterbilt 579', model: '579 2024', licensePlate: 'WB-10-ST-9900', vehicleType: 'Truck', region: 'Kolkata', capacity: 19000, odometer: 41600, status: 'Available' },
+  { id: 1, name: 'Volvo FH16', image: null, model: 'FH16 2024', licensePlate: 'KA-01-AB-1234', vehicleType: 'Truck', region: 'Bangalore', maxLoadCapacity: 16000, odometer: 45200, acquisitionCost: 4200000, status: 'Available' },
+  { id: 2, name: 'Scania R500', image: null, model: 'R500 2023', licensePlate: 'MH-02-CD-5678', vehicleType: 'Truck', region: 'Mumbai', maxLoadCapacity: 18000, odometer: 62300, acquisitionCost: 4800000, status: 'On Trip' },
+  { id: 3, name: 'MAN TGX', image: null, model: 'TGX 2022', licensePlate: 'DL-03-EF-9012', vehicleType: 'Truck', region: 'Delhi', maxLoadCapacity: 15000, odometer: 78500, acquisitionCost: 3900000, status: 'In Shop' },
+  { id: 4, name: 'DAF XF', image: null, model: 'XF 2024', licensePlate: 'TN-04-GH-3456', vehicleType: 'Truck', region: 'Chennai', maxLoadCapacity: 14000, odometer: 31200, acquisitionCost: 3600000, status: 'On Trip' },
+  { id: 5, name: 'Mercedes Actros', image: null, model: 'Actros 2023', licensePlate: 'GJ-05-IJ-7890', vehicleType: 'Truck', region: 'Ahmedabad', maxLoadCapacity: 20000, odometer: 55800, acquisitionCost: 5200000, status: 'Available' },
+  { id: 6, name: 'Tata Ace Gold', image: null, model: 'Ace Gold 2024', licensePlate: 'KA-06-KL-1122', vehicleType: 'Van', region: 'Pune', maxLoadCapacity: 1000, odometer: 12400, acquisitionCost: 450000, status: 'Available' },
+  { id: 7, name: 'Mahindra Supro', image: null, model: 'Supro 2023', licensePlate: 'RJ-07-MN-3344', vehicleType: 'Van', region: 'Jaipur', maxLoadCapacity: 800, odometer: 28900, acquisitionCost: 520000, status: 'On Trip' },
+  { id: 8, name: 'Bajaj Maxima', image: null, model: 'Maxima C 2024', licensePlate: 'UP-08-OP-5566', vehicleType: 'Bike', region: 'Lucknow', maxLoadCapacity: 500, odometer: 8700, acquisitionCost: 280000, status: 'Out of Service' },
+  { id: 9, name: 'Kenworth T680', image: null, model: 'T680 2023', licensePlate: 'AP-09-QR-7788', vehicleType: 'Truck', region: 'Hyderabad', maxLoadCapacity: 22000, odometer: 91400, acquisitionCost: 5500000, status: 'On Trip' },
+  { id: 10, name: 'Peterbilt 579', image: null, model: '579 2024', licensePlate: 'WB-10-ST-9900', vehicleType: 'Truck', region: 'Kolkata', maxLoadCapacity: 19000, odometer: 41600, acquisitionCost: 4900000, status: 'Available' },
 ];
 
 const STATUS_STYLES = {
@@ -76,7 +76,7 @@ function Vehicles() {
         v.vehicleType.toLowerCase().includes(q) ||
         v.region.toLowerCase().includes(q) ||
         v.status.toLowerCase().includes(q) ||
-        String(v.capacity).includes(q) ||
+        String(v.maxLoadCapacity).includes(q) ||
         String(v.odometer).includes(q)
     );
   }, [search]);
@@ -90,7 +90,7 @@ function Vehicles() {
       </div>
 
       {/* ── Vehicle Table Card ── */}
-      <div className="rounded-2xl border border-secondary/50 bg-primary/40 backdrop-blur-sm overflow-hidden">
+      <div className="rounded-2xl border border-muted/15 bg-primary/40 backdrop-blur-sm overflow-hidden">
         {/* Toolbar: search + actions */}
         <div className="p-5 pb-0 space-y-4">
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
@@ -104,7 +104,7 @@ function Vehicles() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search vehicles, models, plates, regions…"
-                className="w-full pl-10 pr-4 py-2.5 bg-secondary/20 border border-secondary/50 rounded-lg text-accent placeholder-muted focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition text-sm"
+                className="w-full pl-10 pr-4 py-2.5 bg-muted/8 border border-muted/20 rounded-lg text-accent placeholder-muted focus:outline-none focus:ring-2 focus:ring-secondary/50 focus:border-transparent transition text-sm"
               />
             </div>
 
@@ -117,7 +117,7 @@ function Vehicles() {
               ].map(({ label, Icon }) => (
                 <button
                   key={label}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-secondary/20 border border-secondary/50 rounded-lg text-sm font-medium text-muted hover:text-accent hover:bg-secondary/40 transition focus:outline-none focus:ring-2 focus:ring-accent"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-muted/8 border border-muted/20 rounded-lg text-sm font-medium text-muted hover:text-accent hover:bg-muted/15 transition focus:outline-none focus:ring-2 focus:ring-secondary/50"
                 >
                   <Icon />
                   <span className="hidden md:inline">{label}</span>
@@ -127,7 +127,7 @@ function Vehicles() {
           </div>
 
           {/* New Vehicle button row */}
-          <div className="flex items-center justify-between border-b border-secondary/50 pb-4">
+          <div className="flex items-center justify-between border-b border-muted/15 pb-4">
             <p className="text-sm text-muted">
               <span className="text-accent font-semibold">{filtered.length}</span> vehicle{filtered.length !== 1 ? 's' : ''} found
             </p>
@@ -147,7 +147,7 @@ function Vehicles() {
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left">
             <thead>
-              <tr className="bg-secondary/15">
+              <tr className="bg-muted/5">
                 <th className="px-4 py-3.5 font-semibold text-muted text-xs uppercase tracking-wider text-center">Sr. No.</th>
                 <th className="px-4 py-3.5 font-semibold text-muted text-xs uppercase tracking-wider text-center">Name</th>
                 <th className="px-4 py-3.5 font-semibold text-muted text-xs uppercase tracking-wider text-center">Model</th>
@@ -160,12 +160,12 @@ function Vehicles() {
                 <th className="px-4 py-3.5 font-semibold text-muted text-xs uppercase tracking-wider text-center">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-secondary/30">
+            <tbody className="divide-y divide-muted/10">
               {filtered.length > 0 ? (
                 filtered.map((v, idx) => (
                   <tr
                     key={v.id}
-                    className={`hover:bg-secondary/15 transition-colors ${idx % 2 === 0 ? 'bg-transparent' : 'bg-secondary/5'}`}
+                    className={`hover:bg-muted/8 transition-colors ${idx % 2 === 0 ? 'bg-transparent' : 'bg-muted/[0.03]'}`}
                   >
                     <td className="px-4 py-4 text-muted font-mono text-center">{idx + 1}</td>
                     <td className="px-4 py-4 text-center">
@@ -175,7 +175,7 @@ function Vehicles() {
                     </td>
                     <td className="px-4 py-4 text-muted text-center">{v.model}</td>
                     <td className="px-4 py-4 text-center">
-                      <span className="font-mono text-accent/80 bg-secondary/20 px-2 py-0.5 rounded text-xs">{v.licensePlate}</span>
+                      <span className="font-mono text-accent/80 bg-muted/10 px-2 py-0.5 rounded text-xs">{v.licensePlate}</span>
                     </td>
                     <td className="px-4 py-4 text-center">
                       <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${TYPE_STYLES[v.vehicleType]}`}>
@@ -183,7 +183,7 @@ function Vehicles() {
                       </span>
                     </td>
                     <td className="px-4 py-4 text-muted text-center">{v.region}</td>
-                    <td className="px-4 py-4 text-accent text-center font-mono">{v.capacity.toLocaleString()}</td>
+                    <td className="px-4 py-4 text-accent text-center font-mono">{v.maxLoadCapacity.toLocaleString()}</td>
                     <td className="px-4 py-4 text-accent text-center font-mono">{v.odometer.toLocaleString()}</td>
                     <td className="px-4 py-4 text-center">
                       <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${STATUS_STYLES[v.status]}`}>
@@ -196,7 +196,7 @@ function Vehicles() {
                         {/* View */}
                         <button
                           title="View"
-                          className="p-1.5 rounded-lg text-muted hover:text-accent hover:bg-secondary/30 transition"
+                          className="p-1.5 rounded-lg text-muted hover:text-accent hover:bg-muted/15 transition"
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -243,7 +243,7 @@ function Vehicles() {
         </div>
 
         {/* ── Table footer ── */}
-        <div className="px-5 py-3.5 border-t border-secondary/30 flex items-center justify-between">
+        <div className="px-5 py-3.5 border-t border-muted/10 flex items-center justify-between">
           <p className="text-xs text-muted">
             Showing {filtered.length} of {VEHICLES_DATA.length} vehicles
           </p>

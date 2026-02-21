@@ -21,6 +21,7 @@ const VEHICLE_TYPES = ['Truck', 'Van', 'Bike'];
 
 const initialForm = {
   name: '',
+  image: '',
   model: '',
   licensePlate: '',
   vehicleType: '',
@@ -152,6 +153,22 @@ function VehicleModal({ isOpen, onClose }) {
               />
               {errors.model && <p className="text-red-400 text-xs mt-1">{errors.model}</p>}
             </div>
+          </div>
+
+          {/* Row 1b: Vehicle Image URL */}
+          <div>
+            <label htmlFor="v-image" className="block text-sm font-medium text-accent mb-1.5">
+              Vehicle Image URL <span className="text-muted font-normal">(optional)</span>
+            </label>
+            <input
+              id="v-image"
+              name="image"
+              type="url"
+              value={formData.image}
+              onChange={handleChange}
+              placeholder="https://example.com/vehicle-image.jpg"
+              className={inputClass('image')}
+            />
           </div>
 
           {/* Row 2: License Plate + Vehicle Type */}

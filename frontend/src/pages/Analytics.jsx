@@ -84,17 +84,17 @@ const FINANCIAL_SUMMARY = [
    ══════════════════════════════════════════ */
 
 const CHART_COLORS = {
-  accent: '#EFEAD8',
-  muted: '#D0C9C0',
-  primary: '#5F7161',
-  secondary: '#6D8B74',
+  accent: '#EAEFEF',
+  muted: '#BFC9D1',
+  primary: '#25343F',
+  secondary: '#FF9B51',
   line1: '#60a5fa',   // blue  (truck)
   line2: '#34d399',   // green (van)
   line3: '#fb923c',   // orange (bike)
   bar: '#818cf8',     // indigo
   profitPos: '#34d399',
   profitNeg: '#f87171',
-  heatLow: '#6D8B74',
+  heatLow: '#FF9B51',
   heatHigh: '#f87171',
 };
 
@@ -572,28 +572,28 @@ function Analytics() {
       {/* ── Charts Grid ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Fuel Efficiency */}
-        <div className="rounded-2xl border border-secondary/50 bg-primary/40 backdrop-blur-sm overflow-hidden p-5">
+        <div className="rounded-2xl border border-muted/15 bg-primary/40 backdrop-blur-sm overflow-hidden p-5">
           <h3 className="text-sm font-semibold text-accent mb-1">Fuel Efficiency Trend</h3>
           <p className="text-xs text-muted mb-4">Avg km/L over the past 12 months</p>
           <FuelEfficiencyChart />
         </div>
 
         {/* Top 5 Costliest Vehicles */}
-        <div className="rounded-2xl border border-secondary/50 bg-primary/40 backdrop-blur-sm overflow-hidden p-5">
+        <div className="rounded-2xl border border-muted/15 bg-primary/40 backdrop-blur-sm overflow-hidden p-5">
           <h3 className="text-sm font-semibold text-accent mb-1">Top 5 Costliest Vehicles</h3>
           <p className="text-xs text-muted mb-4">Total maintenance spend (₹)</p>
           <CostliestVehiclesChart />
         </div>
 
         {/* India Booking Heatmap */}
-        <div className="rounded-2xl border border-secondary/50 bg-primary/40 backdrop-blur-sm overflow-hidden p-5">
+        <div className="rounded-2xl border border-muted/15 bg-primary/40 backdrop-blur-sm overflow-hidden p-5">
           <h3 className="text-sm font-semibold text-accent mb-1">Booking Heatmap — India</h3>
           <p className="text-xs text-muted mb-4">Vehicle bookings by city over the past month</p>
           <IndiaHeatmap />
         </div>
 
         {/* Daily Profit */}
-        <div className="rounded-2xl border border-secondary/50 bg-primary/40 backdrop-blur-sm overflow-hidden p-5">
+        <div className="rounded-2xl border border-muted/15 bg-primary/40 backdrop-blur-sm overflow-hidden p-5">
           <h3 className="text-sm font-semibold text-accent mb-1">Daily Profit — Feb 2026</h3>
           <p className="text-xs text-muted mb-4">Net profit per day this month</p>
           <DailyProfitChart />
@@ -601,7 +601,7 @@ function Analytics() {
       </div>
 
       {/* ── Financial Summary Table ── */}
-      <div className="rounded-2xl border border-secondary/50 bg-primary/40 backdrop-blur-sm overflow-hidden">
+      <div className="rounded-2xl border border-muted/15 bg-primary/40 backdrop-blur-sm overflow-hidden">
         <div className="p-5 pb-0">
           <h3 className="text-sm font-semibold text-accent mb-1">Financial Summary of Month</h3>
           <p className="text-xs text-muted mb-4">Revenue, costs, and net profit breakdown</p>
@@ -610,7 +610,7 @@ function Analytics() {
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left">
             <thead>
-              <tr className="bg-secondary/15">
+              <tr className="bg-muted/5">
                 <th className="px-5 py-3.5 font-semibold text-muted text-xs uppercase tracking-wider text-center">Month</th>
                 <th className="px-5 py-3.5 font-semibold text-muted text-xs uppercase tracking-wider text-center">Revenue</th>
                 <th className="px-5 py-3.5 font-semibold text-muted text-xs uppercase tracking-wider text-center">Fuel Cost</th>
@@ -618,11 +618,11 @@ function Analytics() {
                 <th className="px-5 py-3.5 font-semibold text-muted text-xs uppercase tracking-wider text-center">Net Profit</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-secondary/30">
+            <tbody className="divide-y divide-muted/10">
               {FINANCIAL_SUMMARY.map((row, idx) => (
                 <tr
                   key={row.month}
-                  className={`hover:bg-secondary/15 transition-colors ${idx % 2 === 0 ? 'bg-transparent' : 'bg-secondary/5'}`}
+                  className={`hover:bg-muted/8 transition-colors ${idx % 2 === 0 ? 'bg-transparent' : 'bg-muted/[0.03]'}`}
                 >
                   <td className="px-5 py-4 text-accent font-medium text-center">{row.month}</td>
                   <td className="px-5 py-4 text-center">
@@ -646,7 +646,7 @@ function Analytics() {
         </div>
 
         {/* Table footer */}
-        <div className="px-5 py-3.5 border-t border-secondary/30 flex items-center justify-between">
+        <div className="px-5 py-3.5 border-t border-muted/10 flex items-center justify-between">
           <p className="text-xs text-muted">
             Showing {FINANCIAL_SUMMARY.length} months
           </p>
