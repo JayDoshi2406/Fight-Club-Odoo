@@ -39,13 +39,13 @@ const createNewTrip = asyncHandler(async (req, res) => {
             throw new ApiError(404, "Driver not found");
         }
 
-        if (driver.availabilityStatus !== "Available") {
-            throw new ApiError(400, `Driver is not available. Current status: ${driver.availabilityStatus}`);
+        if (driver.AvailabilityStatus !== "Available") {
+            throw new ApiError(400, `Driver is not available. Current status: ${driver.AvailabilityStatus}`);
         }
 
         // Reserve vehicle atomically
         vehicle.status = "On Trip";
-        await vehicle.save({ session });
+        await vehicle.save({ session, validateModifiedOnly: true });
 
         const [trip] = await Trip.create(
             [
@@ -103,13 +103,13 @@ const dispatchTrip = asyncHandler(async (req, res) => {
     await trip.save();
 
     vehicle.status = "On Trip";
-    await vehicle.save();
+    await vehicle.save({ validateModifiedOnly: true });
 
-    driver.availabilityStatus = "On Trip";
-    await driver.save();
+    driver.AvailabilityStatus = "On_Trip";
+    await driver.save({ validateModifiedOnly: true });
 
     await publishEvent("vehicle.updated", { vehicleId: vehicle._id, status: vehicle.status });
-    await publishEvent("driver.updated", { driverId: driver._id, availabilityStatus: driver.availabilityStatus });
+    await publishEvent("driver.updated", { driverId: driver._id, AvailabilityStatus: driver.AvailabilityStatus });
 
     res.status(200).json(
         new ApiResponse(200, { trip }, "Trip dispatched successfully")
@@ -150,13 +150,13 @@ const completeTrip = asyncHandler(async (req, res) => {
 
     vehicle.odometer = finalOdometer;
     vehicle.status = "Available";
-    await vehicle.save();
+    await vehicle.save({ validateModifiedOnly: true });
 
-    driver.availabilityStatus = "Available";
-    await driver.save();
+    driver.AvailabilityStatus = "Available";
+    await driver.save({ validateModifiedOnly: true });
 
     await publishEvent("vehicle.updated", { vehicleId: vehicle._id, status: vehicle.status, odometer: vehicle.odometer });
-    await publishEvent("driver.updated", { driverId: driver._id, availabilityStatus: driver.availabilityStatus });
+    await publishEvent("driver.updated", { driverId: driver._id, AvailabilityStatus: driver.AvailabilityStatus });
 
     res.status(200).json(
         new ApiResponse(200, { trip }, "Trip completed successfully")
@@ -189,13 +189,13 @@ const cancelTrip = asyncHandler(async (req, res) => {
     await trip.save();
 
     vehicle.status = "Available";
-    await vehicle.save();
+    await vehicle.save({ validateModifiedOnly: true });
 
-    driver.availabilityStatus = "Available";
-    await driver.save();
+    driver.AvailabilityStatus = "Available";
+    await driver.save({ validateModifiedOnly: true });
 
     await publishEvent("vehicle.updated", { vehicleId: vehicle._id, status: vehicle.status });
-    await publishEvent("driver.updated", { driverId: driver._id, availabilityStatus: driver.availabilityStatus });
+    await publishEvent("driver.updated", { driverId: driver._id, AvailabilityStatus: driver.AvailabilityStatus });
 
     res.status(200).json(
         new ApiResponse(200, { trip }, "Trip cancelled successfully")

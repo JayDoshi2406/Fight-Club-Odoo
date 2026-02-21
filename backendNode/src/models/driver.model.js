@@ -35,9 +35,9 @@ const driverSchema = new Schema(
             enum: ["On Duty", "Off Duty", "Suspended"],
             default: "On Duty",
         },
-        availabilityStatus: {
+        AvailabilityStatus: {
             type: String,
-            enum: ["Available", "On Trip"],
+            enum: ["Available", "On_Trip"],
             default: "Available",
         },
     },

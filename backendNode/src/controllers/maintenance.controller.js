@@ -7,7 +7,7 @@ import { publishEvent } from "../utils/redis.js";
 import mongoose from "mongoose";
 
 const logServiceEvent = asyncHandler(async (req, res) => {
-    const { vehicleId, serviceType, date, cost, notes } = req.body;
+    const { vehicleId, serviceType, date, cost, notes } = req.body || {};
 
     if (!vehicleId || !serviceType || !cost) {
         throw new ApiError(400, "vehicleId, serviceType, and cost are required");
@@ -36,7 +36,7 @@ const logServiceEvent = asyncHandler(async (req, res) => {
         );
 
         vehicle.status = "In Shop";
-        await vehicle.save({ session });
+        await vehicle.save({ session, validateModifiedOnly: true });
 
         await session.commitTransaction();
         session.endSession();
