@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { useUser } from './context/UserContext';
 import VehicleModal from './modals/VehicleModal';
 import TripModal from './modals/TripModal';
@@ -89,11 +89,7 @@ const SearchIcon = () => (
   </svg>
 );
 
-const GroupIcon = () => (
-  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-  </svg>
-);
+
 
 const FilterIcon = () => (
   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -107,28 +103,106 @@ const SortIcon = () => (
   </svg>
 );
 
+/* ── Role-based visibility config ── */
+const ROLE_CONFIG = {
+  'Fleet Manager': {
+    kpis: ['Total Vehicles', 'Maintenance Alerts'],
+    tabs: ['fleet', 'maintenance'],
+    buttons: ['vehicle'],
+  },
+  'Dispatcher': {
+    kpis: ['Active Trips', 'Pending Cargo'],
+    tabs: ['fleet', 'cargo'],
+    buttons: ['trip'],
+  },
+  'Safety Officer': {
+    kpis: ['Maintenance Alerts'],
+    tabs: ['maintenance'],
+    buttons: [],
+  },
+  'Financial Analyst': {
+    kpis: ['Total Vehicles', 'Active Trips', 'Maintenance Alerts', 'Pending Cargo'],
+    tabs: ['fleet', 'maintenance', 'cargo'],
+    buttons: [],
+  },
+};
+
 /* ── Component ── */
 function Dashboard() {
-  const [activeTab, setActiveTab] = useState('fleet');
+  const { user } = useUser();
+  const role = user?.role || 'Fleet Manager';
+  const config = ROLE_CONFIG[role] || ROLE_CONFIG['Fleet Manager'];
+
+  const visibleKPIs = KPI_CARDS.filter((c) => config.kpis.includes(c.label));
+  const visibleTabs = TABS.filter((t) => config.tabs.includes(t.key));
+
+  const [activeTab, setActiveTab] = useState(visibleTabs[0]?.key || 'fleet');
   const [search, setSearch] = useState('');
   const [vehicleModalOpen, setVehicleModalOpen] = useState(false);
   const [tripModalOpen, setTripModalOpen] = useState(false);
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+  const [showSortDropdown, setShowSortDropdown] = useState(false);
+  const [statusFilter, setStatusFilter] = useState([]);
+  const [showFilterDropdown, setShowFilterDropdown] = useState(false);
 
-  const currentTab = TABS.find((t) => t.key === activeTab);
+  const sortRef = useRef(null);
+  const filterRef = useRef(null);
+
+  const SORT_COLUMNS = [
+    { key: 'trip', label: 'Trip' },
+    { key: 'vehicle', label: 'Vehicle' },
+    { key: 'driver', label: 'Driver' },
+    { key: 'status', label: 'Status' },
+  ];
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (sortRef.current && !sortRef.current.contains(e.target)) setShowSortDropdown(false);
+      if (filterRef.current && !filterRef.current.contains(e.target)) setShowFilterDropdown(false);
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    setStatusFilter([]);
+    setSortConfig({ key: null, direction: 'asc' });
+  }, [activeTab]);
+
+  const currentTab = visibleTabs.find((t) => t.key === activeTab) || visibleTabs[0];
+  const uniqueStatuses = [...new Set(currentTab?.data?.map((r) => r.status) || [])];
 
   const filtered = useMemo(() => {
-    if (!search.trim()) return currentTab.data;
-    const q = search.toLowerCase();
-    return currentTab.data.filter(
-      (row) =>
-        String(row.trip).includes(q) ||
-        row.vehicle.toLowerCase().includes(q) ||
-        row.driver.toLowerCase().includes(q) ||
-        row.status.toLowerCase().includes(q)
-    );
-  }, [search, currentTab]);
-
-  const { user } = useUser();
+    let data = currentTab?.data || [];
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      data = data.filter(
+        (row) =>
+          String(row.trip).includes(q) ||
+          row.vehicle.toLowerCase().includes(q) ||
+          row.driver.toLowerCase().includes(q) ||
+          row.status.toLowerCase().includes(q)
+      );
+    }
+    if (statusFilter.length > 0) {
+      data = data.filter((row) => statusFilter.includes(row.status));
+    }
+    if (sortConfig.key) {
+      data = [...data].sort((a, b) => {
+        const aVal = a[sortConfig.key];
+        const bVal = b[sortConfig.key];
+        if (typeof aVal === 'number' && typeof bVal === 'number') {
+          return sortConfig.direction === 'asc' ? aVal - bVal : bVal - aVal;
+        }
+        const aStr = String(aVal ?? '').toLowerCase();
+        const bStr = String(bVal ?? '').toLowerCase();
+        if (aStr < bStr) return sortConfig.direction === 'asc' ? -1 : 1;
+        if (aStr > bStr) return sortConfig.direction === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
+    return data;
+  }, [search, currentTab, sortConfig, statusFilter]);
 
   return (
     <div className="p-6 lg:p-8 space-y-8 max-w-350 mx-auto">
@@ -150,8 +224,8 @@ function Dashboard() {
       </div>
 
       {/* ── KPI Cards ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {KPI_CARDS.map((card) => (
+      <div className={`grid grid-cols-1 sm:grid-cols-2 ${visibleKPIs.length <= 2 ? 'lg:grid-cols-2' : 'lg:grid-cols-4'} gap-4`}>
+        {visibleKPIs.map((card) => (
           <div
             key={card.label}
             className={`relative overflow-hidden rounded-xl border border-muted/15 bg-linear-to-br ${card.accent} p-5 transition hover:scale-[1.02] hover:shadow-lg`}
@@ -193,26 +267,100 @@ function Dashboard() {
 
             {/* Action buttons */}
             <div className="flex items-center gap-2">
-              {[
-                { label: 'Group By', Icon: GroupIcon },
-                { label: 'Filter', Icon: FilterIcon },
-                { label: 'Sort By', Icon: SortIcon },
-              ].map(({ label, Icon }) => (
+              {/* Filter */}
+              <div className="relative" ref={filterRef}>
                 <button
-                  key={label}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-muted/8 border border-muted/20 rounded-lg text-sm font-medium text-muted hover:text-accent hover:bg-muted/15 transition focus:outline-none focus:ring-2 focus:ring-secondary/50"
+                  onClick={() => { setShowFilterDropdown(!showFilterDropdown); setShowSortDropdown(false); }}
+                  className={`inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-muted/8 border rounded-lg text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-secondary/50 ${
+                    statusFilter.length > 0 ? 'border-secondary/50 text-accent' : 'border-muted/20 text-muted hover:text-accent hover:bg-muted/15'
+                  }`}
                 >
-                  <Icon />
-                  <span className="hidden md:inline">{label}</span>
+                  <FilterIcon />
+                  <span className="hidden md:inline">Filter</span>
+                  {statusFilter.length > 0 && (
+                    <span className="ml-1 px-1.5 py-0.5 rounded-full bg-secondary/30 text-xs text-accent font-semibold">{statusFilter.length}</span>
+                  )}
                 </button>
-              ))}
+                {showFilterDropdown && (
+                  <div className="absolute right-0 top-full mt-1 w-56 bg-[#1e2b34] border border-muted/20 rounded-lg shadow-xl z-50 py-2">
+                    <p className="px-4 py-1.5 text-xs text-muted uppercase tracking-wider font-semibold">Status</p>
+                    {uniqueStatuses.map((status) => (
+                      <label key={status} className="flex items-center gap-2.5 px-4 py-2 text-sm text-muted hover:text-accent hover:bg-muted/10 transition cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={statusFilter.includes(status)}
+                          onChange={() => setStatusFilter((prev) => prev.includes(status) ? prev.filter((s) => s !== status) : [...prev, status])}
+                          className="rounded border-muted/30 bg-muted/10 text-secondary focus:ring-secondary/50 w-3.5 h-3.5"
+                        />
+                        <span className={`w-1.5 h-1.5 rounded-full ${STATUS_DOT[status]}`} />
+                        {status}
+                      </label>
+                    ))}
+                    {statusFilter.length > 0 && (
+                      <button
+                        onClick={() => { setStatusFilter([]); setShowFilterDropdown(false); }}
+                        className="w-full px-4 py-2 text-sm text-red-400 hover:bg-muted/10 transition border-t border-muted/15 mt-1"
+                      >
+                        Clear Filters
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+              {/* Sort */}
+              <div className="relative" ref={sortRef}>
+                <button
+                  onClick={() => { setShowSortDropdown(!showSortDropdown); setShowFilterDropdown(false); }}
+                  className={`inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-muted/8 border rounded-lg text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-secondary/50 ${
+                    sortConfig.key ? 'border-secondary/50 text-accent' : 'border-muted/20 text-muted hover:text-accent hover:bg-muted/15'
+                  }`}
+                >
+                  <SortIcon />
+                  <span className="hidden md:inline">Sort By</span>
+                  {sortConfig.key && (
+                    <span className="text-secondary text-xs">{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>
+                  )}
+                </button>
+                {showSortDropdown && (
+                  <div className="absolute right-0 top-full mt-1 w-56 bg-[#1e2b34] border border-muted/20 rounded-lg shadow-xl z-50 py-1">
+                    {SORT_COLUMNS.map((col) => (
+                      <button
+                        key={col.key}
+                        onClick={() => {
+                          setSortConfig((prev) => ({
+                            key: col.key,
+                            direction: prev.key === col.key && prev.direction === 'asc' ? 'desc' : 'asc',
+                          }));
+                          setShowSortDropdown(false);
+                        }}
+                        className={`w-full flex items-center justify-between px-4 py-2.5 text-sm transition ${
+                          sortConfig.key === col.key ? 'text-accent bg-muted/10' : 'text-muted hover:text-accent hover:bg-muted/10'
+                        }`}
+                      >
+                        <span>{col.label}</span>
+                        {sortConfig.key === col.key && (
+                          <span className="text-secondary font-bold">{sortConfig.direction === 'asc' ? '↑ Asc' : '↓ Desc'}</span>
+                        )}
+                      </button>
+                    ))}
+                    {sortConfig.key && (
+                      <button
+                        onClick={() => { setSortConfig({ key: null, direction: 'asc' }); setShowSortDropdown(false); }}
+                        className="w-full px-4 py-2 text-sm text-red-400 hover:bg-muted/10 transition border-t border-muted/15 mt-1"
+                      >
+                        Clear Sort
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
           {/* ── Tabs + action buttons ── */}
           <div className="flex items-center border-b border-muted/15">
             <div className="flex items-center gap-1 flex-1 overflow-x-auto">
-              {TABS.map((tab) => (
+              {visibleTabs.map((tab) => (
                 <button
                   key={tab.key}
                   onClick={() => setActiveTab(tab.key)}
@@ -241,6 +389,7 @@ function Dashboard() {
 
             {/* Right-side action buttons */}
             <div className="flex items-center gap-2 pb-2 ml-4">
+              {config.buttons.includes('trip') && (
               <button
                 onClick={() => setTripModalOpen(true)}
                 className="inline-flex items-center gap-1.5 px-4 py-2 bg-accent text-primary text-sm font-semibold rounded-lg hover:bg-muted transition focus:outline-none focus:ring-2 focus:ring-accent shadow-sm cursor-pointer"
@@ -250,6 +399,8 @@ function Dashboard() {
                 </svg>
                 New Trip
               </button>
+              )}
+              {config.buttons.includes('vehicle') && (
               <button
                 onClick={() => setVehicleModalOpen(true)}
                 className="inline-flex items-center gap-1.5 px-4 py-2 bg-secondary/30 text-accent text-sm font-semibold rounded-lg hover:bg-secondary/40 border border-secondary/30 transition focus:outline-none focus:ring-2 focus:ring-secondary/50 shadow-sm cursor-pointer"
@@ -259,6 +410,7 @@ function Dashboard() {
                 </svg>
                 New Vehicle
               </button>
+              )}
             </div>
           </div>
         </div>
@@ -322,7 +474,7 @@ function Dashboard() {
         {/* ── Table footer ── */}
         <div className="px-5 py-3.5 border-t border-muted/10 flex items-center justify-between">
           <p className="text-xs text-muted">
-            Showing {filtered.length} of {currentTab.data.length} records
+            Showing {filtered.length} of {currentTab?.data?.length || 0} records
           </p>
           <div className="text-xs text-muted/60">
             Last updated: {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}

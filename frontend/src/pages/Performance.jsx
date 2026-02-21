@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 
 /* ── Sample performance data ── */
 const PERFORMANCE_DATA = [
@@ -64,11 +64,6 @@ const SearchIcon = () => (
   </svg>
 );
 
-const GroupIcon = () => (
-  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-  </svg>
-);
 
 const FilterIcon = () => (
   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -85,21 +80,75 @@ const SortIcon = () => (
 /* ── Component ── */
 function Performance() {
   const [search, setSearch] = useState('');
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+  const [showSortDropdown, setShowSortDropdown] = useState(false);
+  const [dutyFilter, setDutyFilter] = useState([]);
+  const [availFilter, setAvailFilter] = useState([]);
+  const [showFilterDropdown, setShowFilterDropdown] = useState(false);
+
+  const sortRef = useRef(null);
+  const filterRef = useRef(null);
+
+  const SORT_COLUMNS = [
+    { key: 'name', label: 'Name' },
+    { key: 'licenseExpiryDate', label: 'License Expiry' },
+    { key: 'tripCompletionRate', label: 'Completion Rate' },
+    { key: 'safetyScore', label: 'Safety Score' },
+    { key: 'dutyStatus', label: 'Duty Status' },
+    { key: 'availabilityStatus', label: 'Availability' },
+  ];
+
+  const ALL_DUTY = ['On Duty', 'Off Duty', 'Suspended'];
+  const ALL_AVAIL = ['Available', 'On Trip'];
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (sortRef.current && !sortRef.current.contains(e.target)) setShowSortDropdown(false);
+      if (filterRef.current && !filterRef.current.contains(e.target)) setShowFilterDropdown(false);
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const activeFilterCount = dutyFilter.length + availFilter.length;
 
   const filtered = useMemo(() => {
-    if (!search.trim()) return PERFORMANCE_DATA;
-    const q = search.toLowerCase();
-    return PERFORMANCE_DATA.filter(
-      (p) =>
-        p.name.toLowerCase().includes(q) ||
-        p.licenseCategory.toLowerCase().includes(q) ||
-        p.licenseExpiryDate.includes(q) ||
-        String(p.tripCompletionRate).includes(q) ||
-        String(p.safetyScore).includes(q) ||
-        p.dutyStatus.toLowerCase().includes(q) ||
-        p.availabilityStatus.toLowerCase().includes(q)
-    );
-  }, [search]);
+    let data = PERFORMANCE_DATA;
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      data = data.filter(
+        (p) =>
+          p.name.toLowerCase().includes(q) ||
+          p.licenseCategory.toLowerCase().includes(q) ||
+          p.licenseExpiryDate.includes(q) ||
+          String(p.tripCompletionRate).includes(q) ||
+          String(p.safetyScore).includes(q) ||
+          p.dutyStatus.toLowerCase().includes(q) ||
+          p.availabilityStatus.toLowerCase().includes(q)
+      );
+    }
+    if (dutyFilter.length > 0) {
+      data = data.filter((p) => dutyFilter.includes(p.dutyStatus));
+    }
+    if (availFilter.length > 0) {
+      data = data.filter((p) => availFilter.includes(p.availabilityStatus));
+    }
+    if (sortConfig.key) {
+      data = [...data].sort((a, b) => {
+        const aVal = a[sortConfig.key];
+        const bVal = b[sortConfig.key];
+        if (typeof aVal === 'number' && typeof bVal === 'number') {
+          return sortConfig.direction === 'asc' ? aVal - bVal : bVal - aVal;
+        }
+        const aStr = String(aVal ?? '').toLowerCase();
+        const bStr = String(bVal ?? '').toLowerCase();
+        if (aStr < bStr) return sortConfig.direction === 'asc' ? -1 : 1;
+        if (aStr > bStr) return sortConfig.direction === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
+    return data;
+  }, [search, sortConfig, dutyFilter, availFilter]);
 
   return (
     <div className="p-6 lg:p-8 space-y-6 max-w-350 mx-auto">
@@ -130,19 +179,106 @@ function Performance() {
 
             {/* Action buttons */}
             <div className="flex items-center gap-2">
-              {[
-                { label: 'Group By', Icon: GroupIcon },
-                { label: 'Filter', Icon: FilterIcon },
-                { label: 'Sort By', Icon: SortIcon },
-              ].map(({ label, Icon }) => (
+              {/* Filter */}
+              <div className="relative" ref={filterRef}>
                 <button
-                  key={label}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-muted/8 border border-muted/20 rounded-lg text-sm font-medium text-muted hover:text-accent hover:bg-muted/15 transition focus:outline-none focus:ring-2 focus:ring-secondary/50"
+                  onClick={() => { setShowFilterDropdown(!showFilterDropdown); setShowSortDropdown(false); }}
+                  className={`inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-muted/8 border rounded-lg text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-secondary/50 ${
+                    activeFilterCount > 0 ? 'border-secondary/50 text-accent' : 'border-muted/20 text-muted hover:text-accent hover:bg-muted/15'
+                  }`}
                 >
-                  <Icon />
-                  <span className="hidden md:inline">{label}</span>
+                  <FilterIcon />
+                  <span className="hidden md:inline">Filter</span>
+                  {activeFilterCount > 0 && (
+                    <span className="ml-1 px-1.5 py-0.5 rounded-full bg-secondary/30 text-xs text-accent font-semibold">{activeFilterCount}</span>
+                  )}
                 </button>
-              ))}
+                {showFilterDropdown && (
+                  <div className="absolute right-0 top-full mt-1 w-56 bg-[#1e2b34] border border-muted/20 rounded-lg shadow-xl z-50 py-2 max-h-80 overflow-y-auto">
+                    <p className="px-4 py-1.5 text-xs text-muted uppercase tracking-wider font-semibold">Duty Status</p>
+                    {ALL_DUTY.map((status) => (
+                      <label key={status} className="flex items-center gap-2.5 px-4 py-2 text-sm text-muted hover:text-accent hover:bg-muted/10 transition cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={dutyFilter.includes(status)}
+                          onChange={() => setDutyFilter((prev) => prev.includes(status) ? prev.filter((s) => s !== status) : [...prev, status])}
+                          className="rounded border-muted/30 bg-muted/10 text-secondary focus:ring-secondary/50 w-3.5 h-3.5"
+                        />
+                        <span className={`w-1.5 h-1.5 rounded-full ${DUTY_DOT[status]}`} />
+                        {status}
+                      </label>
+                    ))}
+                    <p className="px-4 py-1.5 text-xs text-muted uppercase tracking-wider font-semibold mt-2 border-t border-muted/15 pt-2">Availability</p>
+                    {ALL_AVAIL.map((status) => (
+                      <label key={status} className="flex items-center gap-2.5 px-4 py-2 text-sm text-muted hover:text-accent hover:bg-muted/10 transition cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={availFilter.includes(status)}
+                          onChange={() => setAvailFilter((prev) => prev.includes(status) ? prev.filter((s) => s !== status) : [...prev, status])}
+                          className="rounded border-muted/30 bg-muted/10 text-secondary focus:ring-secondary/50 w-3.5 h-3.5"
+                        />
+                        <span className={`w-1.5 h-1.5 rounded-full ${AVAIL_DOT[status]}`} />
+                        {status}
+                      </label>
+                    ))}
+                    {activeFilterCount > 0 && (
+                      <button
+                        onClick={() => { setDutyFilter([]); setAvailFilter([]); setShowFilterDropdown(false); }}
+                        className="w-full px-4 py-2 text-sm text-red-400 hover:bg-muted/10 transition border-t border-muted/15 mt-1"
+                      >
+                        Clear All Filters
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+              {/* Sort */}
+              <div className="relative" ref={sortRef}>
+                <button
+                  onClick={() => { setShowSortDropdown(!showSortDropdown); setShowFilterDropdown(false); }}
+                  className={`inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-muted/8 border rounded-lg text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-secondary/50 ${
+                    sortConfig.key ? 'border-secondary/50 text-accent' : 'border-muted/20 text-muted hover:text-accent hover:bg-muted/15'
+                  }`}
+                >
+                  <SortIcon />
+                  <span className="hidden md:inline">Sort By</span>
+                  {sortConfig.key && (
+                    <span className="text-secondary text-xs">{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>
+                  )}
+                </button>
+                {showSortDropdown && (
+                  <div className="absolute right-0 top-full mt-1 w-56 bg-[#1e2b34] border border-muted/20 rounded-lg shadow-xl z-50 py-1">
+                    {SORT_COLUMNS.map((col) => (
+                      <button
+                        key={col.key}
+                        onClick={() => {
+                          setSortConfig((prev) => ({
+                            key: col.key,
+                            direction: prev.key === col.key && prev.direction === 'asc' ? 'desc' : 'asc',
+                          }));
+                          setShowSortDropdown(false);
+                        }}
+                        className={`w-full flex items-center justify-between px-4 py-2.5 text-sm transition ${
+                          sortConfig.key === col.key ? 'text-accent bg-muted/10' : 'text-muted hover:text-accent hover:bg-muted/10'
+                        }`}
+                      >
+                        <span>{col.label}</span>
+                        {sortConfig.key === col.key && (
+                          <span className="text-secondary font-bold">{sortConfig.direction === 'asc' ? '↑ Asc' : '↓ Desc'}</span>
+                        )}
+                      </button>
+                    ))}
+                    {sortConfig.key && (
+                      <button
+                        onClick={() => { setSortConfig({ key: null, direction: 'asc' }); setShowSortDropdown(false); }}
+                        className="w-full px-4 py-2 text-sm text-red-400 hover:bg-muted/10 transition border-t border-muted/15 mt-1"
+                      >
+                        Clear Sort
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 

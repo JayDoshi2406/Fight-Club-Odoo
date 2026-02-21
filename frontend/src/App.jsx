@@ -28,23 +28,23 @@ function App() {
           <Route index element={<RoleRoute><Dashboard /></RoleRoute>} />
           <Route path="dashboard" element={<RoleRoute><Dashboard /></RoleRoute>} />
 
-          {/* Vehicle Registry — Dispatcher, Fleet Manager */}
-          <Route path="vehicles" element={<RoleRoute allowedRoles={['Fleet Manager', 'Dispatcher']}><Vehicles /></RoleRoute>} />
+          {/* Vehicle Registry — Fleet Manager (vehicle health, asset lifecycle) */}
+          <Route path="vehicles" element={<RoleRoute allowedRoles={['Fleet Manager']}><Vehicles /></RoleRoute>} />
 
-          {/* Trip Dispatcher — Dispatcher */}
-          <Route path="trips" element={<RoleRoute allowedRoles={['Fleet Manager', 'Dispatcher']}><Trips /></RoleRoute>} />
+          {/* Trip Dispatcher — Dispatcher (create trips, assign drivers, validate cargo) */}
+          <Route path="trips" element={<RoleRoute allowedRoles={['Dispatcher']}><Trips /></RoleRoute>} />
 
-          {/* Maintenance — Safety Officer */}
-          <Route path="maintenance" element={<RoleRoute allowedRoles={['Fleet Manager', 'Safety Officer']}><Maintenance /></RoleRoute>} />
+          {/* Maintenance — Fleet Manager (vehicle health, scheduling) */}
+          <Route path="maintenance" element={<RoleRoute allowedRoles={['Fleet Manager']}><Maintenance /></RoleRoute>} />
 
-          {/* Trip & Expense — Fleet Manager, Dispatcher */}
-          <Route path="expenses" element={<RoleRoute allowedRoles={['Fleet Manager', 'Dispatcher']}><Expenses /></RoleRoute>} />
+          {/* Expenses — Financial Analyst (fuel spend, operational costs) */}
+          <Route path="expenses" element={<RoleRoute allowedRoles={['Financial Analyst']}><Expenses /></RoleRoute>} />
 
-          {/* Performance — Financial Analyst */}
-          <Route path="performance" element={<RoleRoute allowedRoles={['Fleet Manager', 'Financial Analyst']}><Performance /></RoleRoute>} />
+          {/* Performance — Safety Officer (driver compliance, license expirations, safety scores) */}
+          <Route path="performance" element={<RoleRoute allowedRoles={['Safety Officer']}><Performance /></RoleRoute>} />
 
-          {/* Analytics — Financial Analyst */}
-          <Route path="analytics" element={<RoleRoute allowedRoles={['Fleet Manager', 'Financial Analyst']}><Analytics /></RoleRoute>} />
+          {/* Analytics — Financial Analyst (maintenance ROI, operational costs) */}
+          <Route path="analytics" element={<RoleRoute allowedRoles={['Financial Analyst']}><Analytics /></RoleRoute>} />
 
           {/* Profile — all roles */}
           <Route path="profile" element={<RoleRoute><Profile /></RoleRoute>} />

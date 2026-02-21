@@ -1,19 +1,25 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import ExpenseModal from '../modals/ExpenseModal';
 
-/* ── Sample fuel expense data (matches FuelExpenseSchema) ── */
-const EXPENSES_DATA = [
-  { id: 1, vehicleId: 'Volvo FH16', tripId: 'TRP-001', date: '2026-02-18', liters: 120, cost: 14500 },
-  { id: 2, vehicleId: 'Tata Ace Gold', tripId: 'TRP-002', date: '2026-02-17', liters: 45, cost: 5400 },
-  { id: 3, vehicleId: 'Scania R500', tripId: 'TRP-003', date: '2026-02-16', liters: 180, cost: 21600 },
-  { id: 4, vehicleId: 'Bajaj Maxima', tripId: null, date: '2026-02-15', liters: 8, cost: 960 },
-  { id: 5, vehicleId: 'MAN TGX', tripId: 'TRP-005', date: '2026-02-14', liters: 200, cost: 24000 },
-  { id: 6, vehicleId: 'Mahindra Supro', tripId: 'TRP-006', date: '2026-02-13', liters: 35, cost: 4200 },
-  { id: 7, vehicleId: 'DAF XF', tripId: 'TRP-007', date: '2026-02-12', liters: 160, cost: 19200 },
-  { id: 8, vehicleId: 'Mercedes Actros', tripId: null, date: '2026-02-11', liters: 140, cost: 16800 },
-  { id: 9, vehicleId: 'Kenworth T680', tripId: 'TRP-009', date: '2026-02-10', liters: 190, cost: 22800 },
-  { id: 10, vehicleId: 'Peterbilt 579', tripId: 'TRP-010', date: '2026-02-09', liters: 175, cost: 21000 },
-];
+/* ── Generated fuel expense data ── */
+const _EXP_VEHICLES = ['Tata Prima', 'Ashok Leyland 4825', 'Eicher Pro 3015', 'BharatBenz 3523R', 'Volvo FMX', 'Tata Winger Cargo', 'Mahindra Supro Maxitruck', 'Ashok Leyland Dost+', 'Maruti Suzuki Eeco Cargo', 'Force Traveller Delivery Van', 'Hero HF Deluxe', 'Bajaj CT 110', 'TVS XL100', 'Honda Shine', 'Suzuki Access 125'];
+
+const EXPENSES_DATA = Array.from({ length: 100 }, (_, i) => {
+  const vIdx = i % 15;
+  const isTruck = vIdx < 5;
+  const isVan = vIdx >= 5 && vIdx < 10;
+  const liters = isTruck ? 80 + ((i * 13) % 160) : isVan ? 20 + ((i * 7) % 40) : 2 + ((i * 3) % 8);
+  const costPerL = 100 + ((i * 3) % 30);
+  const d = new Date(2026, 1, 21 - (i % 90));
+  return {
+    id: i + 1,
+    vehicleId: _EXP_VEHICLES[vIdx],
+    tripId: i % 3 === 0 ? null : `TRP-${String(i + 1).padStart(3, '0')}`,
+    date: d.toISOString().split('T')[0],
+    liters,
+    cost: liters * costPerL,
+  };
+});
 
 
 
@@ -24,11 +30,6 @@ const SearchIcon = () => (
   </svg>
 );
 
-const GroupIcon = () => (
-  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-  </svg>
-);
 
 const FilterIcon = () => (
   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -46,19 +47,100 @@ const SortIcon = () => (
 function Expenses() {
   const [search, setSearch] = useState('');
   const [expenseModalOpen, setExpenseModalOpen] = useState(false);
+  const [expenses, setExpenses] = useState(EXPENSES_DATA);
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+  const [showSortDropdown, setShowSortDropdown] = useState(false);
+  const [vehicleFilter, setVehicleFilter] = useState([]);
+  const [showFilterDropdown, setShowFilterDropdown] = useState(false);
+
+  const sortRef = useRef(null);
+  const filterRef = useRef(null);
+  const sentinelRef = useRef(null);
+  const [visibleCount, setVisibleCount] = useState(10);
+
+  const SORT_COLUMNS = [
+    { key: 'vehicleId', label: 'Vehicle' },
+    { key: 'tripId', label: 'Trip ID' },
+    { key: 'date', label: 'Date' },
+    { key: 'liters', label: 'Liters' },
+    { key: 'cost', label: 'Cost' },
+  ];
+
+  const ALL_VEHICLES = [...new Set(EXPENSES_DATA.map((e) => e.vehicleId))].sort();
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (sortRef.current && !sortRef.current.contains(e.target)) setShowSortDropdown(false);
+      if (filterRef.current && !filterRef.current.contains(e.target)) setShowFilterDropdown(false);
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleAddExpense = (formData) => {
+    const newExpense = {
+      id: expenses.length > 0 ? Math.max(...expenses.map((e) => e.id)) + 1 : 1,
+      vehicleId: formData.vehicleId,
+      tripId: formData.tripId || null,
+      date: formData.date,
+      liters: Number(formData.liters),
+      cost: Number(formData.cost),
+    };
+    setExpenses((prev) => [newExpense, ...prev]);
+  };
 
   const filtered = useMemo(() => {
-    if (!search.trim()) return EXPENSES_DATA;
-    const q = search.toLowerCase();
-    return EXPENSES_DATA.filter(
-      (e) =>
-        e.vehicleId.toLowerCase().includes(q) ||
-        (e.tripId && e.tripId.toLowerCase().includes(q)) ||
-        e.date.includes(q) ||
-        String(e.liters).includes(q) ||
-        String(e.cost).includes(q)
-    );
-  }, [search]);
+    let data = expenses;
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      data = data.filter(
+        (e) =>
+          e.vehicleId.toLowerCase().includes(q) ||
+          (e.tripId && e.tripId.toLowerCase().includes(q)) ||
+          e.date.includes(q) ||
+          String(e.liters).includes(q) ||
+          String(e.cost).includes(q)
+      );
+    }
+    if (vehicleFilter.length > 0) {
+      data = data.filter((e) => vehicleFilter.includes(e.vehicleId));
+    }
+    if (sortConfig.key) {
+      data = [...data].sort((a, b) => {
+        let aVal = a[sortConfig.key];
+        let bVal = b[sortConfig.key];
+        if (aVal == null && bVal == null) return 0;
+        if (aVal == null) return 1;
+        if (bVal == null) return -1;
+        if (typeof aVal === 'number' && typeof bVal === 'number') {
+          return sortConfig.direction === 'asc' ? aVal - bVal : bVal - aVal;
+        }
+        const aStr = String(aVal).toLowerCase();
+        const bStr = String(bVal).toLowerCase();
+        if (aStr < bStr) return sortConfig.direction === 'asc' ? -1 : 1;
+        if (aStr > bStr) return sortConfig.direction === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
+    return data;
+  }, [search, expenses, sortConfig, vehicleFilter]);
+
+  useEffect(() => { setVisibleCount(10); }, [search, sortConfig, vehicleFilter]);
+
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+    let timer;
+    const obs = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting) {
+        timer = setTimeout(() => setVisibleCount((prev) => prev + 10), 200);
+      }
+    }, { threshold: 0.1 });
+    obs.observe(el);
+    return () => { obs.disconnect(); clearTimeout(timer); };
+  }, [visibleCount, filtered.length]);
+
+  const visibleRows = filtered.slice(0, visibleCount);
 
   return (
     <div className="p-6 lg:p-8 space-y-6 max-w-350 mx-auto">
@@ -89,19 +171,92 @@ function Expenses() {
 
             {/* Action buttons */}
             <div className="flex items-center gap-2">
-              {[
-                { label: 'Group By', Icon: GroupIcon },
-                { label: 'Filter', Icon: FilterIcon },
-                { label: 'Sort By', Icon: SortIcon },
-              ].map(({ label, Icon }) => (
+              {/* Filter */}
+              <div className="relative" ref={filterRef}>
                 <button
-                  key={label}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-muted/8 border border-muted/20 rounded-lg text-sm font-medium text-muted hover:text-accent hover:bg-muted/15 transition focus:outline-none focus:ring-2 focus:ring-secondary/50"
+                  onClick={() => { setShowFilterDropdown(!showFilterDropdown); setShowSortDropdown(false); }}
+                  className={`inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-muted/8 border rounded-lg text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-secondary/50 ${
+                    vehicleFilter.length > 0 ? 'border-secondary/50 text-accent' : 'border-muted/20 text-muted hover:text-accent hover:bg-muted/15'
+                  }`}
                 >
-                  <Icon />
-                  <span className="hidden md:inline">{label}</span>
+                  <FilterIcon />
+                  <span className="hidden md:inline">Filter</span>
+                  {vehicleFilter.length > 0 && (
+                    <span className="ml-1 px-1.5 py-0.5 rounded-full bg-secondary/30 text-xs text-accent font-semibold">{vehicleFilter.length}</span>
+                  )}
                 </button>
-              ))}
+                {showFilterDropdown && (
+                  <div className="absolute right-0 top-full mt-1 w-56 bg-[#1e2b34] border border-muted/20 rounded-lg shadow-xl z-50 py-2 max-h-80 overflow-y-auto">
+                    <p className="px-4 py-1.5 text-xs text-muted uppercase tracking-wider font-semibold">Vehicle</p>
+                    {ALL_VEHICLES.map((vehicle) => (
+                      <label key={vehicle} className="flex items-center gap-2.5 px-4 py-2 text-sm text-muted hover:text-accent hover:bg-muted/10 transition cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={vehicleFilter.includes(vehicle)}
+                          onChange={() => setVehicleFilter((prev) => prev.includes(vehicle) ? prev.filter((v) => v !== vehicle) : [...prev, vehicle])}
+                          className="rounded border-muted/30 bg-muted/10 text-secondary focus:ring-secondary/50 w-3.5 h-3.5"
+                        />
+                        {vehicle}
+                      </label>
+                    ))}
+                    {vehicleFilter.length > 0 && (
+                      <button
+                        onClick={() => { setVehicleFilter([]); setShowFilterDropdown(false); }}
+                        className="w-full px-4 py-2 text-sm text-red-400 hover:bg-muted/10 transition border-t border-muted/15 mt-1"
+                      >
+                        Clear Filters
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+              {/* Sort */}
+              <div className="relative" ref={sortRef}>
+                <button
+                  onClick={() => { setShowSortDropdown(!showSortDropdown); setShowFilterDropdown(false); }}
+                  className={`inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-muted/8 border rounded-lg text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-secondary/50 ${
+                    sortConfig.key ? 'border-secondary/50 text-accent' : 'border-muted/20 text-muted hover:text-accent hover:bg-muted/15'
+                  }`}
+                >
+                  <SortIcon />
+                  <span className="hidden md:inline">Sort By</span>
+                  {sortConfig.key && (
+                    <span className="text-secondary text-xs">{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>
+                  )}
+                </button>
+                {showSortDropdown && (
+                  <div className="absolute right-0 top-full mt-1 w-56 bg-[#1e2b34] border border-muted/20 rounded-lg shadow-xl z-50 py-1">
+                    {SORT_COLUMNS.map((col) => (
+                      <button
+                        key={col.key}
+                        onClick={() => {
+                          setSortConfig((prev) => ({
+                            key: col.key,
+                            direction: prev.key === col.key && prev.direction === 'asc' ? 'desc' : 'asc',
+                          }));
+                          setShowSortDropdown(false);
+                        }}
+                        className={`w-full flex items-center justify-between px-4 py-2.5 text-sm transition ${
+                          sortConfig.key === col.key ? 'text-accent bg-muted/10' : 'text-muted hover:text-accent hover:bg-muted/10'
+                        }`}
+                      >
+                        <span>{col.label}</span>
+                        {sortConfig.key === col.key && (
+                          <span className="text-secondary font-bold">{sortConfig.direction === 'asc' ? '↑ Asc' : '↓ Desc'}</span>
+                        )}
+                      </button>
+                    ))}
+                    {sortConfig.key && (
+                      <button
+                        onClick={() => { setSortConfig({ key: null, direction: 'asc' }); setShowSortDropdown(false); }}
+                        className="w-full px-4 py-2 text-sm text-red-400 hover:bg-muted/10 transition border-t border-muted/15 mt-1"
+                      >
+                        Clear Sort
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -137,7 +292,7 @@ function Expenses() {
             </thead>
             <tbody className="divide-y divide-muted/10">
               {filtered.length > 0 ? (
-                filtered.map((e, idx) => (
+                visibleRows.map((e, idx) => (
                   <tr
                     key={e.id}
                     className={`hover:bg-muted/8 transition-colors ${idx % 2 === 0 ? 'bg-transparent' : 'bg-muted/[0.03]'}`}
@@ -175,10 +330,23 @@ function Expenses() {
           </table>
         </div>
 
+        {/* ── Lazy load sentinel ── */}
+        {visibleCount < filtered.length && (
+          <div ref={sentinelRef} className="flex items-center justify-center py-4">
+            <div className="flex items-center gap-2 text-muted text-sm">
+              <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+              Loading more…
+            </div>
+          </div>
+        )}
+
         {/* ── Table footer ── */}
         <div className="px-5 py-3.5 border-t border-muted/10 flex items-center justify-between">
           <p className="text-xs text-muted">
-            Showing {filtered.length} of {EXPENSES_DATA.length} records
+            Showing {Math.min(visibleCount, filtered.length)} of {filtered.length} records
           </p>
           <div className="text-xs text-muted/60">
             Last updated: {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -187,7 +355,7 @@ function Expenses() {
       </div>
 
       {/* ── Expense Modal ── */}
-      <ExpenseModal isOpen={expenseModalOpen} onClose={() => setExpenseModalOpen(false)} />
+      <ExpenseModal isOpen={expenseModalOpen} onClose={() => setExpenseModalOpen(false)} onSubmit={handleAddExpense} />
     </div>
   );
 }

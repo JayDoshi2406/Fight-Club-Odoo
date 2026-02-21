@@ -1,21 +1,22 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import ServiceModal from '../modals/ServiceModal';
 
-/* ── Sample maintenance data (matches ServiceLogSchema) ── */
-const MAINTENANCE_DATA = [
-  { id: 1, vehicleId: 'Volvo FH16', serviceType: 'Engine Oil Change', date: '2026-02-18', cost: 4500, notes: 'Routine 10K km service' },
-  { id: 2, vehicleId: 'Scania R500', serviceType: 'Brake Pad Replacement', date: '2026-02-15', cost: 8200, notes: 'Front and rear pads replaced' },
-  { id: 3, vehicleId: 'MAN TGX', serviceType: 'Transmission Repair', date: '2026-02-12', cost: 32000, notes: 'Gear slipping reported by driver' },
-  { id: 4, vehicleId: 'DAF XF', serviceType: 'Tire Rotation & Alignment', date: '2026-02-10', cost: 6800, notes: '' },
-  { id: 5, vehicleId: 'Mercedes Actros', serviceType: 'AC Compressor Fix', date: '2026-02-08', cost: 12500, notes: 'Compressor replaced with OEM part' },
-  { id: 6, vehicleId: 'Tata Ace Gold', serviceType: 'Battery Replacement', date: '2026-02-05', cost: 3200, notes: 'Amaron Pro 65Ah installed' },
-  { id: 7, vehicleId: 'Mahindra Supro', serviceType: 'Clutch Plate Change', date: '2026-02-03', cost: 7500, notes: '' },
-  { id: 8, vehicleId: 'Kenworth T680', serviceType: 'Radiator Flush', date: '2026-01-28', cost: 5600, notes: 'Coolant topped up' },
-  { id: 9, vehicleId: 'Peterbilt 579', serviceType: 'Suspension Overhaul', date: '2026-01-25', cost: 28000, notes: 'All leaf springs replaced' },
-  { id: 10, vehicleId: 'Freightliner Cascadia', serviceType: 'Headlight Assembly', date: '2026-01-20', cost: 4200, notes: 'LED upgrade' },
-  { id: 11, vehicleId: 'Bajaj Maxima', serviceType: 'Chain & Sprocket Kit', date: '2026-01-18', cost: 1800, notes: '' },
-  { id: 12, vehicleId: 'Iveco S-Way', serviceType: 'Turbocharger Service', date: '2026-01-15', cost: 45000, notes: 'Turbo rebuilt, new bearings' },
-];
+/* ── Generated maintenance data ── */
+const _MAINT_VEHICLES = ['Tata Prima', 'Ashok Leyland 4825', 'Eicher Pro 3015', 'BharatBenz 3523R', 'Volvo FMX', 'Tata Winger Cargo', 'Mahindra Supro Maxitruck', 'Ashok Leyland Dost+', 'Maruti Suzuki Eeco Cargo', 'Force Traveller Delivery Van', 'Hero HF Deluxe', 'Bajaj CT 110', 'TVS XL100', 'Honda Shine', 'Suzuki Access 125'];
+const _SERVICE_TYPES = ['Engine Oil Change', 'Brake Pad Replacement', 'Transmission Repair', 'Tire Rotation & Alignment', 'AC Compressor Fix', 'Battery Replacement', 'Clutch Plate Change', 'Radiator Flush', 'Suspension Overhaul', 'Headlight Assembly', 'Chain & Sprocket Kit', 'Turbocharger Service', 'Fuel Injector Cleaning', 'Wheel Bearing Replacement', 'Air Filter Replacement', 'Spark Plug Change', 'Timing Belt Replacement', 'Differential Repair', 'Exhaust System Fix', 'Power Steering Service'];
+const _NOTES = ['Routine service', 'Parts replaced with OEM', 'Reported by driver', 'Under warranty claim', 'Preventive maintenance', 'Emergency repair', 'Scheduled overhaul', 'Minor adjustment', 'Complete rebuild', 'Inspection passed'];
+
+const MAINTENANCE_DATA = Array.from({ length: 100 }, (_, i) => {
+  const d = new Date(2026, 1, 21 - (i % 90));
+  return {
+    id: i + 1,
+    vehicleId: _MAINT_VEHICLES[i % 15],
+    serviceType: _SERVICE_TYPES[i % 20],
+    date: d.toISOString().split('T')[0],
+    cost: 1000 + ((i * 1571) % 45000),
+    notes: i % 3 === 0 ? '' : _NOTES[i % 10],
+  };
+});
 
 /* ── Icons ── */
 const SearchIcon = () => (
@@ -24,11 +25,6 @@ const SearchIcon = () => (
   </svg>
 );
 
-const GroupIcon = () => (
-  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-  </svg>
-);
 
 const FilterIcon = () => (
   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -46,19 +42,97 @@ const SortIcon = () => (
 function Maintenance() {
   const [search, setSearch] = useState('');
   const [serviceModalOpen, setServiceModalOpen] = useState(false);
+  const [maintenanceRecords, setMaintenanceRecords] = useState(MAINTENANCE_DATA);
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+  const [showSortDropdown, setShowSortDropdown] = useState(false);
+  const [vehicleFilter, setVehicleFilter] = useState([]);
+  const [showFilterDropdown, setShowFilterDropdown] = useState(false);
+
+  const sortRef = useRef(null);
+  const filterRef = useRef(null);
+  const sentinelRef = useRef(null);
+  const [visibleCount, setVisibleCount] = useState(10);
+
+  const SORT_COLUMNS = [
+    { key: 'vehicleId', label: 'Vehicle' },
+    { key: 'serviceType', label: 'Service Type' },
+    { key: 'date', label: 'Date' },
+    { key: 'cost', label: 'Cost' },
+    { key: 'notes', label: 'Notes' },
+  ];
+
+  const ALL_VEHICLES = [...new Set(MAINTENANCE_DATA.map((m) => m.vehicleId))].sort();
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (sortRef.current && !sortRef.current.contains(e.target)) setShowSortDropdown(false);
+      if (filterRef.current && !filterRef.current.contains(e.target)) setShowFilterDropdown(false);
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleAddService = (formData) => {
+    const newRecord = {
+      id: maintenanceRecords.length > 0 ? Math.max(...maintenanceRecords.map((m) => m.id)) + 1 : 1,
+      vehicleId: formData.vehicleId,
+      serviceType: formData.serviceType,
+      date: formData.date,
+      cost: Number(formData.cost),
+      notes: formData.notes || '',
+    };
+    setMaintenanceRecords((prev) => [newRecord, ...prev]);
+  };
 
   const filtered = useMemo(() => {
-    if (!search.trim()) return MAINTENANCE_DATA;
-    const q = search.toLowerCase();
-    return MAINTENANCE_DATA.filter(
-      (m) =>
-        m.vehicleId.toLowerCase().includes(q) ||
-        m.serviceType.toLowerCase().includes(q) ||
-        m.date.includes(q) ||
-        String(m.cost).includes(q) ||
-        (m.notes && m.notes.toLowerCase().includes(q))
-    );
-  }, [search]);
+    let data = maintenanceRecords;
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      data = data.filter(
+        (m) =>
+          m.vehicleId.toLowerCase().includes(q) ||
+          m.serviceType.toLowerCase().includes(q) ||
+          m.date.includes(q) ||
+          String(m.cost).includes(q) ||
+          (m.notes && m.notes.toLowerCase().includes(q))
+      );
+    }
+    if (vehicleFilter.length > 0) {
+      data = data.filter((m) => vehicleFilter.includes(m.vehicleId));
+    }
+    if (sortConfig.key) {
+      data = [...data].sort((a, b) => {
+        const aVal = a[sortConfig.key];
+        const bVal = b[sortConfig.key];
+        if (typeof aVal === 'number' && typeof bVal === 'number') {
+          return sortConfig.direction === 'asc' ? aVal - bVal : bVal - aVal;
+        }
+        const aStr = String(aVal ?? '').toLowerCase();
+        const bStr = String(bVal ?? '').toLowerCase();
+        if (aStr < bStr) return sortConfig.direction === 'asc' ? -1 : 1;
+        if (aStr > bStr) return sortConfig.direction === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
+    return data;
+  }, [search, maintenanceRecords, sortConfig, vehicleFilter]);
+
+  useEffect(() => { setVisibleCount(10); }, [search, sortConfig, vehicleFilter]);
+
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+    let timer;
+    const obs = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting) {
+        timer = setTimeout(() => setVisibleCount((prev) => prev + 10), 200);
+      }
+    }, { threshold: 0.1 });
+    obs.observe(el);
+    return () => { obs.disconnect(); clearTimeout(timer); };
+  }, [visibleCount, filtered.length]);
+
+  const visibleRows = filtered.slice(0, visibleCount);
 
   return (
     <div className="p-6 lg:p-8 space-y-6 max-w-350 mx-auto">
@@ -89,19 +163,92 @@ function Maintenance() {
 
             {/* Action buttons */}
             <div className="flex items-center gap-2">
-              {[
-                { label: 'Group By', Icon: GroupIcon },
-                { label: 'Filter', Icon: FilterIcon },
-                { label: 'Sort By', Icon: SortIcon },
-              ].map(({ label, Icon }) => (
+              {/* Filter */}
+              <div className="relative" ref={filterRef}>
                 <button
-                  key={label}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-muted/8 border border-muted/20 rounded-lg text-sm font-medium text-muted hover:text-accent hover:bg-muted/15 transition focus:outline-none focus:ring-2 focus:ring-secondary/50"
+                  onClick={() => { setShowFilterDropdown(!showFilterDropdown); setShowSortDropdown(false); }}
+                  className={`inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-muted/8 border rounded-lg text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-secondary/50 ${
+                    vehicleFilter.length > 0 ? 'border-secondary/50 text-accent' : 'border-muted/20 text-muted hover:text-accent hover:bg-muted/15'
+                  }`}
                 >
-                  <Icon />
-                  <span className="hidden md:inline">{label}</span>
+                  <FilterIcon />
+                  <span className="hidden md:inline">Filter</span>
+                  {vehicleFilter.length > 0 && (
+                    <span className="ml-1 px-1.5 py-0.5 rounded-full bg-secondary/30 text-xs text-accent font-semibold">{vehicleFilter.length}</span>
+                  )}
                 </button>
-              ))}
+                {showFilterDropdown && (
+                  <div className="absolute right-0 top-full mt-1 w-56 bg-[#1e2b34] border border-muted/20 rounded-lg shadow-xl z-50 py-2 max-h-80 overflow-y-auto">
+                    <p className="px-4 py-1.5 text-xs text-muted uppercase tracking-wider font-semibold">Vehicle</p>
+                    {ALL_VEHICLES.map((vehicle) => (
+                      <label key={vehicle} className="flex items-center gap-2.5 px-4 py-2 text-sm text-muted hover:text-accent hover:bg-muted/10 transition cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={vehicleFilter.includes(vehicle)}
+                          onChange={() => setVehicleFilter((prev) => prev.includes(vehicle) ? prev.filter((v) => v !== vehicle) : [...prev, vehicle])}
+                          className="rounded border-muted/30 bg-muted/10 text-secondary focus:ring-secondary/50 w-3.5 h-3.5"
+                        />
+                        {vehicle}
+                      </label>
+                    ))}
+                    {vehicleFilter.length > 0 && (
+                      <button
+                        onClick={() => { setVehicleFilter([]); setShowFilterDropdown(false); }}
+                        className="w-full px-4 py-2 text-sm text-red-400 hover:bg-muted/10 transition border-t border-muted/15 mt-1"
+                      >
+                        Clear Filters
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+              {/* Sort */}
+              <div className="relative" ref={sortRef}>
+                <button
+                  onClick={() => { setShowSortDropdown(!showSortDropdown); setShowFilterDropdown(false); }}
+                  className={`inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-muted/8 border rounded-lg text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-secondary/50 ${
+                    sortConfig.key ? 'border-secondary/50 text-accent' : 'border-muted/20 text-muted hover:text-accent hover:bg-muted/15'
+                  }`}
+                >
+                  <SortIcon />
+                  <span className="hidden md:inline">Sort By</span>
+                  {sortConfig.key && (
+                    <span className="text-secondary text-xs">{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>
+                  )}
+                </button>
+                {showSortDropdown && (
+                  <div className="absolute right-0 top-full mt-1 w-56 bg-[#1e2b34] border border-muted/20 rounded-lg shadow-xl z-50 py-1">
+                    {SORT_COLUMNS.map((col) => (
+                      <button
+                        key={col.key}
+                        onClick={() => {
+                          setSortConfig((prev) => ({
+                            key: col.key,
+                            direction: prev.key === col.key && prev.direction === 'asc' ? 'desc' : 'asc',
+                          }));
+                          setShowSortDropdown(false);
+                        }}
+                        className={`w-full flex items-center justify-between px-4 py-2.5 text-sm transition ${
+                          sortConfig.key === col.key ? 'text-accent bg-muted/10' : 'text-muted hover:text-accent hover:bg-muted/10'
+                        }`}
+                      >
+                        <span>{col.label}</span>
+                        {sortConfig.key === col.key && (
+                          <span className="text-secondary font-bold">{sortConfig.direction === 'asc' ? '↑ Asc' : '↓ Desc'}</span>
+                        )}
+                      </button>
+                    ))}
+                    {sortConfig.key && (
+                      <button
+                        onClick={() => { setSortConfig({ key: null, direction: 'asc' }); setShowSortDropdown(false); }}
+                        className="w-full px-4 py-2 text-sm text-red-400 hover:bg-muted/10 transition border-t border-muted/15 mt-1"
+                      >
+                        Clear Sort
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -137,7 +284,7 @@ function Maintenance() {
             </thead>
             <tbody className="divide-y divide-muted/10">
               {filtered.length > 0 ? (
-                filtered.map((m, idx) => (
+                visibleRows.map((m, idx) => (
                   <tr
                     key={m.id}
                     className={`hover:bg-muted/8 transition-colors ${idx % 2 === 0 ? 'bg-transparent' : 'bg-muted/[0.03]'}`}
@@ -177,10 +324,23 @@ function Maintenance() {
           </table>
         </div>
 
+        {/* ── Lazy load sentinel ── */}
+        {visibleCount < filtered.length && (
+          <div ref={sentinelRef} className="flex items-center justify-center py-4">
+            <div className="flex items-center gap-2 text-muted text-sm">
+              <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+              Loading more…
+            </div>
+          </div>
+        )}
+
         {/* ── Table footer ── */}
         <div className="px-5 py-3.5 border-t border-muted/10 flex items-center justify-between">
           <p className="text-xs text-muted">
-            Showing {filtered.length} of {MAINTENANCE_DATA.length} records
+            Showing {Math.min(visibleCount, filtered.length)} of {filtered.length} records
           </p>
           <div className="text-xs text-muted/60">
             Last updated: {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -188,7 +348,7 @@ function Maintenance() {
         </div>
       </div>
       {/* ── Service Modal ── */}
-      <ServiceModal isOpen={serviceModalOpen} onClose={() => setServiceModalOpen(false)} />
+      <ServiceModal isOpen={serviceModalOpen} onClose={() => setServiceModalOpen(false)} onSubmit={handleAddService} />
     </div>
   );
 }

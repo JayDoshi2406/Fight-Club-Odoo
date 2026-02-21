@@ -8,7 +8,7 @@ const initialForm = {
   notes: '',
 };
 
-function ServiceModal({ isOpen, onClose }) {
+function ServiceModal({ isOpen, onClose, onSubmit }) {
   const [formData, setFormData] = useState(initialForm);
   const [errors, setErrors] = useState({});
 
@@ -36,8 +36,7 @@ function ServiceModal({ isOpen, onClose }) {
       setErrors(newErrors);
       return;
     }
-    // TODO: API call to create service record
-    console.log('New Service:', formData);
+    if (onSubmit) onSubmit(formData);
     setFormData(initialForm);
     setErrors({});
     onClose();

@@ -7,7 +7,7 @@ const initialForm = {
   startOdometer: '',
 };
 
-function TripModal({ isOpen, onClose }) {
+function TripModal({ isOpen, onClose, onSubmit }) {
   const [formData, setFormData] = useState(initialForm);
   const [errors, setErrors] = useState({});
 
@@ -37,8 +37,7 @@ function TripModal({ isOpen, onClose }) {
       setErrors(newErrors);
       return;
     }
-    // TODO: API call to create trip
-    console.log('New Trip:', formData);
+    if (onSubmit) onSubmit(formData);
     setFormData(initialForm);
     setErrors({});
     onClose();

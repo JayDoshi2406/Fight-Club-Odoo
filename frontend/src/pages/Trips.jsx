@@ -1,21 +1,30 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import TripModal from '../modals/TripModal';
 
-/* ── Sample trip data (matches TripSchema) ── */
-const TRIPS_DATA = [
-  { id: 1, vehicleId: 'Volvo FH16', driverId: 'Arjun Mehta', cargoWeight: 12000, status: 'Dispatched', startOdometer: 45200, finalOdometer: null, dispatchedAt: '2026-02-18T08:30:00Z', completedAt: null },
-  { id: 2, vehicleId: 'Tata Ace Gold', driverId: 'Priya Sharma', cargoWeight: 800, status: 'Draft', startOdometer: null, finalOdometer: null, dispatchedAt: null, completedAt: null },
-  { id: 3, vehicleId: 'Scania R500', driverId: 'Vikram Singh', cargoWeight: 18500, status: 'Completed', startOdometer: 78000, finalOdometer: 79450, dispatchedAt: '2026-02-10T06:00:00Z', completedAt: '2026-02-12T18:30:00Z' },
-  { id: 4, vehicleId: 'Bajaj Maxima', driverId: 'Neha Gupta', cargoWeight: 350, status: 'Cancelled', startOdometer: null, finalOdometer: null, dispatchedAt: null, completedAt: null },
-  { id: 5, vehicleId: 'MAN TGX', driverId: 'Ravi Kumar', cargoWeight: 22000, status: 'Dispatched', startOdometer: 112500, finalOdometer: null, dispatchedAt: '2026-02-17T05:15:00Z', completedAt: null },
-  { id: 6, vehicleId: 'Mahindra Supro', driverId: 'Anita Desai', cargoWeight: 600, status: 'Draft', startOdometer: null, finalOdometer: null, dispatchedAt: null, completedAt: null },
-  { id: 7, vehicleId: 'DAF XF', driverId: 'Suresh Patel', cargoWeight: 15000, status: 'Completed', startOdometer: 64200, finalOdometer: 65800, dispatchedAt: '2026-02-08T07:00:00Z', completedAt: '2026-02-09T22:45:00Z' },
-  { id: 8, vehicleId: 'Bajaj Maxima', driverId: 'Meera Nair', cargoWeight: 280, status: 'Dispatched', startOdometer: 15600, finalOdometer: null, dispatchedAt: '2026-02-19T09:00:00Z', completedAt: null },
-  { id: 9, vehicleId: 'Mahindra Supro', driverId: 'Kiran Joshi', cargoWeight: 750, status: 'Completed', startOdometer: 32000, finalOdometer: 32480, dispatchedAt: '2026-02-05T10:30:00Z', completedAt: '2026-02-05T18:00:00Z' },
-  { id: 10, vehicleId: 'Mercedes Actros', driverId: 'Deepak Rao', cargoWeight: 20000, status: 'Draft', startOdometer: null, finalOdometer: null, dispatchedAt: null, completedAt: null },
-  { id: 11, vehicleId: 'Kenworth T680', driverId: 'Arjun Mehta', cargoWeight: 24000, status: 'Dispatched', startOdometer: 98700, finalOdometer: null, dispatchedAt: '2026-02-20T04:00:00Z', completedAt: null },
-  { id: 12, vehicleId: 'Tata Ace Gold', driverId: 'Priya Sharma', cargoWeight: 900, status: 'Cancelled', startOdometer: null, finalOdometer: null, dispatchedAt: null, completedAt: null },
-];
+/* ── Vehicle & driver catalog ── */
+const _TRIP_VEHICLES = ['Tata Prima', 'Ashok Leyland 4825', 'Eicher Pro 3015', 'BharatBenz 3523R', 'Volvo FMX', 'Tata Winger Cargo', 'Mahindra Supro Maxitruck', 'Ashok Leyland Dost+', 'Maruti Suzuki Eeco Cargo', 'Force Traveller Delivery Van', 'Hero HF Deluxe', 'Bajaj CT 110', 'TVS XL100', 'Honda Shine', 'Suzuki Access 125'];
+const _DRIVERS = ['Arjun Mehta', 'Priya Sharma', 'Vikram Singh', 'Neha Gupta', 'Ravi Kumar', 'Anita Desai', 'Suresh Patel', 'Meera Nair', 'Kiran Joshi', 'Deepak Rao', 'Sanjay Verma', 'Kavitha Reddy', 'Manoj Tiwari', 'Pooja Mishra', 'Rahul Sharma', 'Sunita Yadav', 'Amit Chauhan', 'Lakshmi Iyer', 'Naveen Shetty', 'Divya Pillai'];
+const _TST = ['Draft', 'Dispatched', 'Completed', 'Cancelled'];
+
+const TRIPS_DATA = Array.from({ length: 100 }, (_, i) => {
+  const st = _TST[i % 4];
+  const vIdx = i % 15;
+  const isTruck = vIdx < 5;
+  const isVan = vIdx >= 5 && vIdx < 10;
+  const baseOdo = 10000 + ((i * 3571) % 90000);
+  const dispDate = new Date(2026, 1, 21 - (i % 60));
+  return {
+    id: i + 1,
+    vehicleId: _TRIP_VEHICLES[vIdx],
+    driverId: _DRIVERS[i % 20],
+    cargoWeight: isTruck ? 8000 + ((i * 571) % 18000) : isVan ? 300 + ((i * 71) % 1700) : 10 + ((i * 13) % 180),
+    status: st,
+    startOdometer: st === 'Dispatched' || st === 'Completed' ? baseOdo : null,
+    finalOdometer: st === 'Completed' ? baseOdo + 500 + ((i * 113) % 2000) : null,
+    dispatchedAt: st === 'Dispatched' || st === 'Completed' ? dispDate.toISOString() : null,
+    completedAt: st === 'Completed' ? new Date(dispDate.getTime() + (24 + (i * 7) % 72) * 3600000).toISOString() : null,
+  };
+});
 
 const STATUS_STYLES = {
   Draft: 'bg-gray-500/20 text-gray-300',
@@ -40,11 +49,6 @@ const SearchIcon = () => (
   </svg>
 );
 
-const GroupIcon = () => (
-  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-  </svg>
-);
 
 const FilterIcon = () => (
   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -62,18 +66,104 @@ const SortIcon = () => (
 function Trips() {
   const [search, setSearch] = useState('');
   const [tripModalOpen, setTripModalOpen] = useState(false);
+  const [trips, setTrips] = useState(TRIPS_DATA);
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+  const [showSortDropdown, setShowSortDropdown] = useState(false);
+  const [statusFilter, setStatusFilter] = useState([]);
+  const [showFilterDropdown, setShowFilterDropdown] = useState(false);
+
+  const sortRef = useRef(null);
+  const filterRef = useRef(null);
+  const sentinelRef = useRef(null);
+  const [visibleCount, setVisibleCount] = useState(10);
+
+  const SORT_COLUMNS = [
+    { key: 'vehicleId', label: 'Vehicle' },
+    { key: 'driverId', label: 'Driver' },
+    { key: 'cargoWeight', label: 'Cargo Weight' },
+    { key: 'status', label: 'Status' },
+    { key: 'startOdometer', label: 'Start Odometer' },
+    { key: 'finalOdometer', label: 'Final Odometer' },
+    { key: 'dispatchedAt', label: 'Dispatched At' },
+  ];
+
+  const ALL_STATUSES = ['Draft', 'Dispatched', 'Completed', 'Cancelled'];
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (sortRef.current && !sortRef.current.contains(e.target)) setShowSortDropdown(false);
+      if (filterRef.current && !filterRef.current.contains(e.target)) setShowFilterDropdown(false);
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleAddTrip = (formData) => {
+    const newTrip = {
+      id: trips.length > 0 ? Math.max(...trips.map((t) => t.id)) + 1 : 1,
+      vehicleId: formData.vehicleId,
+      driverId: formData.driverId,
+      cargoWeight: Number(formData.cargoWeight),
+      status: 'Draft',
+      startOdometer: formData.startOdometer ? Number(formData.startOdometer) : null,
+      finalOdometer: null,
+      dispatchedAt: null,
+      completedAt: null,
+    };
+    setTrips((prev) => [newTrip, ...prev]);
+  };
 
   const filtered = useMemo(() => {
-    if (!search.trim()) return TRIPS_DATA;
-    const q = search.toLowerCase();
-    return TRIPS_DATA.filter(
-      (t) =>
-        t.vehicleId.toLowerCase().includes(q) ||
-        t.driverId.toLowerCase().includes(q) ||
-        String(t.cargoWeight).includes(q) ||
-        t.status.toLowerCase().includes(q)
-    );
-  }, [search]);
+    let data = trips;
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      data = data.filter(
+        (t) =>
+          t.vehicleId.toLowerCase().includes(q) ||
+          t.driverId.toLowerCase().includes(q) ||
+          String(t.cargoWeight).includes(q) ||
+          t.status.toLowerCase().includes(q)
+      );
+    }
+    if (statusFilter.length > 0) {
+      data = data.filter((t) => statusFilter.includes(t.status));
+    }
+    if (sortConfig.key) {
+      data = [...data].sort((a, b) => {
+        let aVal = a[sortConfig.key];
+        let bVal = b[sortConfig.key];
+        if (aVal == null && bVal == null) return 0;
+        if (aVal == null) return 1;
+        if (bVal == null) return -1;
+        if (typeof aVal === 'number' && typeof bVal === 'number') {
+          return sortConfig.direction === 'asc' ? aVal - bVal : bVal - aVal;
+        }
+        const aStr = String(aVal).toLowerCase();
+        const bStr = String(bVal).toLowerCase();
+        if (aStr < bStr) return sortConfig.direction === 'asc' ? -1 : 1;
+        if (aStr > bStr) return sortConfig.direction === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
+    return data;
+  }, [search, trips, sortConfig, statusFilter]);
+
+  useEffect(() => { setVisibleCount(10); }, [search, sortConfig, statusFilter]);
+
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+    let timer;
+    const obs = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting) {
+        timer = setTimeout(() => setVisibleCount((prev) => prev + 10), 200);
+      }
+    }, { threshold: 0.1 });
+    obs.observe(el);
+    return () => { obs.disconnect(); clearTimeout(timer); };
+  }, [visibleCount, filtered.length]);
+
+  const visibleRows = filtered.slice(0, visibleCount);
 
   return (
     <div className="p-6 lg:p-8 space-y-6 max-w-350 mx-auto">
@@ -104,19 +194,93 @@ function Trips() {
 
             {/* Action buttons */}
             <div className="flex items-center gap-2">
-              {[
-                { label: 'Group By', Icon: GroupIcon },
-                { label: 'Filter', Icon: FilterIcon },
-                { label: 'Sort By', Icon: SortIcon },
-              ].map(({ label, Icon }) => (
+              {/* Filter */}
+              <div className="relative" ref={filterRef}>
                 <button
-                  key={label}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-muted/8 border border-muted/20 rounded-lg text-sm font-medium text-muted hover:text-accent hover:bg-muted/15 transition focus:outline-none focus:ring-2 focus:ring-secondary/50"
+                  onClick={() => { setShowFilterDropdown(!showFilterDropdown); setShowSortDropdown(false); }}
+                  className={`inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-muted/8 border rounded-lg text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-secondary/50 ${
+                    statusFilter.length > 0 ? 'border-secondary/50 text-accent' : 'border-muted/20 text-muted hover:text-accent hover:bg-muted/15'
+                  }`}
                 >
-                  <Icon />
-                  <span className="hidden md:inline">{label}</span>
+                  <FilterIcon />
+                  <span className="hidden md:inline">Filter</span>
+                  {statusFilter.length > 0 && (
+                    <span className="ml-1 px-1.5 py-0.5 rounded-full bg-secondary/30 text-xs text-accent font-semibold">{statusFilter.length}</span>
+                  )}
                 </button>
-              ))}
+                {showFilterDropdown && (
+                  <div className="absolute right-0 top-full mt-1 w-56 bg-[#1e2b34] border border-muted/20 rounded-lg shadow-xl z-50 py-2">
+                    <p className="px-4 py-1.5 text-xs text-muted uppercase tracking-wider font-semibold">Status</p>
+                    {ALL_STATUSES.map((status) => (
+                      <label key={status} className="flex items-center gap-2.5 px-4 py-2 text-sm text-muted hover:text-accent hover:bg-muted/10 transition cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={statusFilter.includes(status)}
+                          onChange={() => setStatusFilter((prev) => prev.includes(status) ? prev.filter((s) => s !== status) : [...prev, status])}
+                          className="rounded border-muted/30 bg-muted/10 text-secondary focus:ring-secondary/50 w-3.5 h-3.5"
+                        />
+                        <span className={`w-1.5 h-1.5 rounded-full ${STATUS_DOT[status]}`} />
+                        {status}
+                      </label>
+                    ))}
+                    {statusFilter.length > 0 && (
+                      <button
+                        onClick={() => { setStatusFilter([]); setShowFilterDropdown(false); }}
+                        className="w-full px-4 py-2 text-sm text-red-400 hover:bg-muted/10 transition border-t border-muted/15 mt-1"
+                      >
+                        Clear Filters
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+              {/* Sort */}
+              <div className="relative" ref={sortRef}>
+                <button
+                  onClick={() => { setShowSortDropdown(!showSortDropdown); setShowFilterDropdown(false); }}
+                  className={`inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-muted/8 border rounded-lg text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-secondary/50 ${
+                    sortConfig.key ? 'border-secondary/50 text-accent' : 'border-muted/20 text-muted hover:text-accent hover:bg-muted/15'
+                  }`}
+                >
+                  <SortIcon />
+                  <span className="hidden md:inline">Sort By</span>
+                  {sortConfig.key && (
+                    <span className="text-secondary text-xs">{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>
+                  )}
+                </button>
+                {showSortDropdown && (
+                  <div className="absolute right-0 top-full mt-1 w-56 bg-[#1e2b34] border border-muted/20 rounded-lg shadow-xl z-50 py-1 max-h-80 overflow-y-auto">
+                    {SORT_COLUMNS.map((col) => (
+                      <button
+                        key={col.key}
+                        onClick={() => {
+                          setSortConfig((prev) => ({
+                            key: col.key,
+                            direction: prev.key === col.key && prev.direction === 'asc' ? 'desc' : 'asc',
+                          }));
+                          setShowSortDropdown(false);
+                        }}
+                        className={`w-full flex items-center justify-between px-4 py-2.5 text-sm transition ${
+                          sortConfig.key === col.key ? 'text-accent bg-muted/10' : 'text-muted hover:text-accent hover:bg-muted/10'
+                        }`}
+                      >
+                        <span>{col.label}</span>
+                        {sortConfig.key === col.key && (
+                          <span className="text-secondary font-bold">{sortConfig.direction === 'asc' ? '↑ Asc' : '↓ Desc'}</span>
+                        )}
+                      </button>
+                    ))}
+                    {sortConfig.key && (
+                      <button
+                        onClick={() => { setSortConfig({ key: null, direction: 'asc' }); setShowSortDropdown(false); }}
+                        className="w-full px-4 py-2 text-sm text-red-400 hover:bg-muted/10 transition border-t border-muted/15 mt-1"
+                      >
+                        Clear Sort
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -154,7 +318,7 @@ function Trips() {
             </thead>
             <tbody className="divide-y divide-muted/10">
               {filtered.length > 0 ? (
-                filtered.map((t, idx) => (
+                visibleRows.map((t, idx) => (
                   <tr
                     key={t.id}
                     className={`hover:bg-muted/8 transition-colors ${idx % 2 === 0 ? 'bg-transparent' : 'bg-muted/[0.03]'}`}
@@ -197,10 +361,23 @@ function Trips() {
           </table>
         </div>
 
+        {/* ── Lazy load sentinel ── */}
+        {visibleCount < filtered.length && (
+          <div ref={sentinelRef} className="flex items-center justify-center py-4">
+            <div className="flex items-center gap-2 text-muted text-sm">
+              <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+              Loading more…
+            </div>
+          </div>
+        )}
+
         {/* ── Table footer ── */}
         <div className="px-5 py-3.5 border-t border-muted/10 flex items-center justify-between">
           <p className="text-xs text-muted">
-            Showing {filtered.length} of {TRIPS_DATA.length} trips
+            Showing {Math.min(visibleCount, filtered.length)} of {filtered.length} trips
           </p>
           <div className="text-xs text-muted/60">
             Last updated: {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -209,7 +386,7 @@ function Trips() {
       </div>
 
       {/* ── Trip Modal ── */}
-      <TripModal isOpen={tripModalOpen} onClose={() => setTripModalOpen(false)} />
+      <TripModal isOpen={tripModalOpen} onClose={() => setTripModalOpen(false)} onSubmit={handleAddTrip} />
     </div>
   );
 }

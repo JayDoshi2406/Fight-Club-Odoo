@@ -1,19 +1,44 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import VehicleModal from '../modals/VehicleModal';
 
-/* ── Sample vehicle data ── */
-const VEHICLES_DATA = [
-  { id: 1, name: 'Volvo FH16', image: null, model: 'FH16 2024', licensePlate: 'KA-01-AB-1234', vehicleType: 'Truck', region: 'Bangalore', maxLoadCapacity: 16000, odometer: 45200, acquisitionCost: 4200000, status: 'Available' },
-  { id: 2, name: 'Scania R500', image: null, model: 'R500 2023', licensePlate: 'MH-02-CD-5678', vehicleType: 'Truck', region: 'Mumbai', maxLoadCapacity: 18000, odometer: 62300, acquisitionCost: 4800000, status: 'On Trip' },
-  { id: 3, name: 'MAN TGX', image: null, model: 'TGX 2022', licensePlate: 'DL-03-EF-9012', vehicleType: 'Truck', region: 'Delhi', maxLoadCapacity: 15000, odometer: 78500, acquisitionCost: 3900000, status: 'In Shop' },
-  { id: 4, name: 'DAF XF', image: null, model: 'XF 2024', licensePlate: 'TN-04-GH-3456', vehicleType: 'Truck', region: 'Chennai', maxLoadCapacity: 14000, odometer: 31200, acquisitionCost: 3600000, status: 'On Trip' },
-  { id: 5, name: 'Mercedes Actros', image: null, model: 'Actros 2023', licensePlate: 'GJ-05-IJ-7890', vehicleType: 'Truck', region: 'Ahmedabad', maxLoadCapacity: 20000, odometer: 55800, acquisitionCost: 5200000, status: 'Available' },
-  { id: 6, name: 'Tata Ace Gold', image: null, model: 'Ace Gold 2024', licensePlate: 'KA-06-KL-1122', vehicleType: 'Van', region: 'Pune', maxLoadCapacity: 1000, odometer: 12400, acquisitionCost: 450000, status: 'Available' },
-  { id: 7, name: 'Mahindra Supro', image: null, model: 'Supro 2023', licensePlate: 'RJ-07-MN-3344', vehicleType: 'Van', region: 'Jaipur', maxLoadCapacity: 800, odometer: 28900, acquisitionCost: 520000, status: 'On Trip' },
-  { id: 8, name: 'Bajaj Maxima', image: null, model: 'Maxima C 2024', licensePlate: 'UP-08-OP-5566', vehicleType: 'Bike', region: 'Lucknow', maxLoadCapacity: 500, odometer: 8700, acquisitionCost: 280000, status: 'Out of Service' },
-  { id: 9, name: 'Kenworth T680', image: null, model: 'T680 2023', licensePlate: 'AP-09-QR-7788', vehicleType: 'Truck', region: 'Hyderabad', maxLoadCapacity: 22000, odometer: 91400, acquisitionCost: 5500000, status: 'On Trip' },
-  { id: 10, name: 'Peterbilt 579', image: null, model: '579 2024', licensePlate: 'WB-10-ST-9900', vehicleType: 'Truck', region: 'Kolkata', maxLoadCapacity: 19000, odometer: 41600, acquisitionCost: 4900000, status: 'Available' },
+/* ── Vehicle fleet catalog ── */
+const VEHICLE_CATALOG = [
+  { name: 'Tata Prima', model: 'Prima 4928', type: 'Truck', baseCapacity: 16000, baseCost: 3200000 },
+  { name: 'Ashok Leyland 4825', model: '4825 IL', type: 'Truck', baseCapacity: 18000, baseCost: 3500000 },
+  { name: 'Eicher Pro 3015', model: 'Pro 3015 BSV', type: 'Truck', baseCapacity: 14000, baseCost: 2800000 },
+  { name: 'BharatBenz 3523R', model: '3523R Mining', type: 'Truck', baseCapacity: 20000, baseCost: 4200000 },
+  { name: 'Volvo FMX', model: 'FMX 460', type: 'Truck', baseCapacity: 22000, baseCost: 5500000 },
+  { name: 'Tata Winger Cargo', model: 'Winger 2024', type: 'Van', baseCapacity: 1500, baseCost: 680000 },
+  { name: 'Mahindra Supro Maxitruck', model: 'Supro MT T2', type: 'Van', baseCapacity: 1200, baseCost: 550000 },
+  { name: 'Ashok Leyland Dost+', model: 'Dost+ CNG', type: 'Van', baseCapacity: 1800, baseCost: 720000 },
+  { name: 'Maruti Suzuki Eeco Cargo', model: 'Eeco Cargo 5S', type: 'Van', baseCapacity: 800, baseCost: 450000 },
+  { name: 'Force Traveller Delivery Van', model: 'Traveller DV', type: 'Van', baseCapacity: 2000, baseCost: 950000 },
+  { name: 'Hero HF Deluxe', model: 'HF Deluxe i3S', type: 'Bike', baseCapacity: 150, baseCost: 65000 },
+  { name: 'Bajaj CT 110', model: 'CT 110 KS', type: 'Bike', baseCapacity: 130, baseCost: 58000 },
+  { name: 'TVS XL100', model: 'XL100 HD', type: 'Bike', baseCapacity: 100, baseCost: 48000 },
+  { name: 'Honda Shine', model: 'Shine 125', type: 'Bike', baseCapacity: 140, baseCost: 78000 },
+  { name: 'Suzuki Access 125', model: 'Access 125 SE', type: 'Bike', baseCapacity: 120, baseCost: 85000 },
 ];
+
+const _REGIONS = ['Mumbai', 'Delhi', 'Bangalore', 'Chennai', 'Hyderabad', 'Ahmedabad', 'Pune', 'Kolkata', 'Jaipur', 'Lucknow', 'Surat', 'Nagpur', 'Indore', 'Bhopal', 'Kochi', 'Patna', 'Chandigarh', 'Coimbatore', 'Vadodara', 'Ranchi'];
+const _SC = ['MH', 'DL', 'KA', 'TN', 'TS', 'GJ', 'MH', 'WB', 'RJ', 'UP', 'GJ', 'MH', 'MP', 'MP', 'KL', 'BR', 'CH', 'TN', 'GJ', 'JH'];
+const _VST = ['Available', 'On Trip', 'In Shop', 'Out of Service'];
+
+const VEHICLES_DATA = Array.from({ length: 100 }, (_, i) => {
+  const c = VEHICLE_CATALOG[i % 15];
+  const r = i % 20;
+  const l1 = String.fromCharCode(65 + (i % 26));
+  const l2 = String.fromCharCode(65 + ((i * 7) % 26));
+  return {
+    id: i + 1, name: c.name, image: null, model: c.model,
+    licensePlate: `${_SC[r]}-${String((i % 20) + 1).padStart(2, '0')}-${l1}${l2}-${String(1000 + ((i * 37) % 9000))}`,
+    vehicleType: c.type, region: _REGIONS[r],
+    maxLoadCapacity: c.baseCapacity + ((i * 137) % Math.max(Math.floor(c.baseCapacity * 0.3), 1)),
+    odometer: 5000 + ((i * 3571) % 95000),
+    acquisitionCost: c.baseCost + ((i * 4713) % Math.max(Math.floor(c.baseCost * 0.2), 1)),
+    status: _VST[i % 4],
+  };
+});
 
 const STATUS_STYLES = {
   Available: 'bg-green-500/20 text-green-300',
@@ -42,11 +67,6 @@ const SearchIcon = () => (
   </svg>
 );
 
-const GroupIcon = () => (
-  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-  </svg>
-);
 
 const FilterIcon = () => (
   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -64,22 +84,115 @@ const SortIcon = () => (
 function Vehicles() {
   const [search, setSearch] = useState('');
   const [vehicleModalOpen, setVehicleModalOpen] = useState(false);
+  const [vehicles, setVehicles] = useState(VEHICLES_DATA);
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+  const [showSortDropdown, setShowSortDropdown] = useState(false);
+  const [statusFilter, setStatusFilter] = useState([]);
+  const [typeFilter, setTypeFilter] = useState([]);
+  const [showFilterDropdown, setShowFilterDropdown] = useState(false);
+
+  const sortRef = useRef(null);
+  const filterRef = useRef(null);
+  const sentinelRef = useRef(null);
+  const [visibleCount, setVisibleCount] = useState(10);
+
+  const SORT_COLUMNS = [
+    { key: 'name', label: 'Name' },
+    { key: 'model', label: 'Model' },
+    { key: 'licensePlate', label: 'License Plate' },
+    { key: 'vehicleType', label: 'Vehicle Type' },
+    { key: 'region', label: 'Region' },
+    { key: 'maxLoadCapacity', label: 'Capacity' },
+    { key: 'odometer', label: 'Odometer' },
+    { key: 'status', label: 'Status' },
+  ];
+
+  const ALL_STATUSES = ['Available', 'On Trip', 'In Shop', 'Out of Service'];
+  const ALL_TYPES = ['Truck', 'Van', 'Bike'];
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (sortRef.current && !sortRef.current.contains(e.target)) setShowSortDropdown(false);
+      if (filterRef.current && !filterRef.current.contains(e.target)) setShowFilterDropdown(false);
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleAddVehicle = (formData) => {
+    const newVehicle = {
+      id: vehicles.length > 0 ? Math.max(...vehicles.map((v) => v.id)) + 1 : 1,
+      name: formData.name,
+      image: formData.image || null,
+      model: formData.model,
+      licensePlate: formData.licensePlate,
+      vehicleType: formData.vehicleType,
+      region: formData.region,
+      maxLoadCapacity: Number(formData.maxLoadCapacity),
+      odometer: Number(formData.odometer),
+      acquisitionCost: Number(formData.acquisitionCost),
+      status: 'Available',
+    };
+    setVehicles((prev) => [newVehicle, ...prev]);
+  };
+
+  const activeFilterCount = statusFilter.length + typeFilter.length;
 
   const filtered = useMemo(() => {
-    if (!search.trim()) return VEHICLES_DATA;
-    const q = search.toLowerCase();
-    return VEHICLES_DATA.filter(
-      (v) =>
-        v.name.toLowerCase().includes(q) ||
-        v.model.toLowerCase().includes(q) ||
-        v.licensePlate.toLowerCase().includes(q) ||
-        v.vehicleType.toLowerCase().includes(q) ||
-        v.region.toLowerCase().includes(q) ||
-        v.status.toLowerCase().includes(q) ||
-        String(v.maxLoadCapacity).includes(q) ||
-        String(v.odometer).includes(q)
-    );
-  }, [search]);
+    let data = vehicles;
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      data = data.filter(
+        (v) =>
+          v.name.toLowerCase().includes(q) ||
+          v.model.toLowerCase().includes(q) ||
+          v.licensePlate.toLowerCase().includes(q) ||
+          v.vehicleType.toLowerCase().includes(q) ||
+          v.region.toLowerCase().includes(q) ||
+          v.status.toLowerCase().includes(q) ||
+          String(v.maxLoadCapacity).includes(q) ||
+          String(v.odometer).includes(q)
+      );
+    }
+    if (statusFilter.length > 0) {
+      data = data.filter((v) => statusFilter.includes(v.status));
+    }
+    if (typeFilter.length > 0) {
+      data = data.filter((v) => typeFilter.includes(v.vehicleType));
+    }
+    if (sortConfig.key) {
+      data = [...data].sort((a, b) => {
+        const aVal = a[sortConfig.key];
+        const bVal = b[sortConfig.key];
+        if (typeof aVal === 'number' && typeof bVal === 'number') {
+          return sortConfig.direction === 'asc' ? aVal - bVal : bVal - aVal;
+        }
+        const aStr = String(aVal ?? '').toLowerCase();
+        const bStr = String(bVal ?? '').toLowerCase();
+        if (aStr < bStr) return sortConfig.direction === 'asc' ? -1 : 1;
+        if (aStr > bStr) return sortConfig.direction === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
+    return data;
+  }, [search, vehicles, sortConfig, statusFilter, typeFilter]);
+
+  useEffect(() => { setVisibleCount(10); }, [search, sortConfig, statusFilter, typeFilter]);
+
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+    let timer;
+    const obs = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting) {
+        timer = setTimeout(() => setVisibleCount((prev) => prev + 10), 200);
+      }
+    }, { threshold: 0.1 });
+    obs.observe(el);
+    return () => { obs.disconnect(); clearTimeout(timer); };
+  }, [visibleCount, filtered.length]);
+
+  const visibleRows = filtered.slice(0, visibleCount);
 
   return (
     <div className="p-6 lg:p-8 space-y-6 max-w-350 mx-auto">
@@ -110,19 +223,105 @@ function Vehicles() {
 
             {/* Action buttons */}
             <div className="flex items-center gap-2">
-              {[
-                { label: 'Group By', Icon: GroupIcon },
-                { label: 'Filter', Icon: FilterIcon },
-                { label: 'Sort By', Icon: SortIcon },
-              ].map(({ label, Icon }) => (
+              {/* Filter */}
+              <div className="relative" ref={filterRef}>
                 <button
-                  key={label}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-muted/8 border border-muted/20 rounded-lg text-sm font-medium text-muted hover:text-accent hover:bg-muted/15 transition focus:outline-none focus:ring-2 focus:ring-secondary/50"
+                  onClick={() => { setShowFilterDropdown(!showFilterDropdown); setShowSortDropdown(false); }}
+                  className={`inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-muted/8 border rounded-lg text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-secondary/50 ${
+                    activeFilterCount > 0 ? 'border-secondary/50 text-accent' : 'border-muted/20 text-muted hover:text-accent hover:bg-muted/15'
+                  }`}
                 >
-                  <Icon />
-                  <span className="hidden md:inline">{label}</span>
+                  <FilterIcon />
+                  <span className="hidden md:inline">Filter</span>
+                  {activeFilterCount > 0 && (
+                    <span className="ml-1 px-1.5 py-0.5 rounded-full bg-secondary/30 text-xs text-accent font-semibold">{activeFilterCount}</span>
+                  )}
                 </button>
-              ))}
+                {showFilterDropdown && (
+                  <div className="absolute right-0 top-full mt-1 w-56 bg-[#1e2b34] border border-muted/20 rounded-lg shadow-xl z-50 py-2 max-h-80 overflow-y-auto">
+                    <p className="px-4 py-1.5 text-xs text-muted uppercase tracking-wider font-semibold">Status</p>
+                    {ALL_STATUSES.map((status) => (
+                      <label key={status} className="flex items-center gap-2.5 px-4 py-2 text-sm text-muted hover:text-accent hover:bg-muted/10 transition cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={statusFilter.includes(status)}
+                          onChange={() => setStatusFilter((prev) => prev.includes(status) ? prev.filter((s) => s !== status) : [...prev, status])}
+                          className="rounded border-muted/30 bg-muted/10 text-secondary focus:ring-secondary/50 w-3.5 h-3.5"
+                        />
+                        <span className={`w-1.5 h-1.5 rounded-full ${STATUS_DOT[status]}`} />
+                        {status}
+                      </label>
+                    ))}
+                    <p className="px-4 py-1.5 text-xs text-muted uppercase tracking-wider font-semibold mt-2 border-t border-muted/15 pt-2">Vehicle Type</p>
+                    {ALL_TYPES.map((type) => (
+                      <label key={type} className="flex items-center gap-2.5 px-4 py-2 text-sm text-muted hover:text-accent hover:bg-muted/10 transition cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={typeFilter.includes(type)}
+                          onChange={() => setTypeFilter((prev) => prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type])}
+                          className="rounded border-muted/30 bg-muted/10 text-secondary focus:ring-secondary/50 w-3.5 h-3.5"
+                        />
+                        {type}
+                      </label>
+                    ))}
+                    {activeFilterCount > 0 && (
+                      <button
+                        onClick={() => { setStatusFilter([]); setTypeFilter([]); setShowFilterDropdown(false); }}
+                        className="w-full px-4 py-2 text-sm text-red-400 hover:bg-muted/10 transition border-t border-muted/15 mt-1"
+                      >
+                        Clear All Filters
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+              {/* Sort */}
+              <div className="relative" ref={sortRef}>
+                <button
+                  onClick={() => { setShowSortDropdown(!showSortDropdown); setShowFilterDropdown(false); }}
+                  className={`inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-muted/8 border rounded-lg text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-secondary/50 ${
+                    sortConfig.key ? 'border-secondary/50 text-accent' : 'border-muted/20 text-muted hover:text-accent hover:bg-muted/15'
+                  }`}
+                >
+                  <SortIcon />
+                  <span className="hidden md:inline">Sort By</span>
+                  {sortConfig.key && (
+                    <span className="text-secondary text-xs">{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>
+                  )}
+                </button>
+                {showSortDropdown && (
+                  <div className="absolute right-0 top-full mt-1 w-56 bg-[#1e2b34] border border-muted/20 rounded-lg shadow-xl z-50 py-1 max-h-80 overflow-y-auto">
+                    {SORT_COLUMNS.map((col) => (
+                      <button
+                        key={col.key}
+                        onClick={() => {
+                          setSortConfig((prev) => ({
+                            key: col.key,
+                            direction: prev.key === col.key && prev.direction === 'asc' ? 'desc' : 'asc',
+                          }));
+                          setShowSortDropdown(false);
+                        }}
+                        className={`w-full flex items-center justify-between px-4 py-2.5 text-sm transition ${
+                          sortConfig.key === col.key ? 'text-accent bg-muted/10' : 'text-muted hover:text-accent hover:bg-muted/10'
+                        }`}
+                      >
+                        <span>{col.label}</span>
+                        {sortConfig.key === col.key && (
+                          <span className="text-secondary font-bold">{sortConfig.direction === 'asc' ? '↑ Asc' : '↓ Desc'}</span>
+                        )}
+                      </button>
+                    ))}
+                    {sortConfig.key && (
+                      <button
+                        onClick={() => { setSortConfig({ key: null, direction: 'asc' }); setShowSortDropdown(false); }}
+                        className="w-full px-4 py-2 text-sm text-red-400 hover:bg-muted/10 transition border-t border-muted/15 mt-1"
+                      >
+                        Clear Sort
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -162,7 +361,7 @@ function Vehicles() {
             </thead>
             <tbody className="divide-y divide-muted/10">
               {filtered.length > 0 ? (
-                filtered.map((v, idx) => (
+                visibleRows.map((v, idx) => (
                   <tr
                     key={v.id}
                     className={`hover:bg-muted/8 transition-colors ${idx % 2 === 0 ? 'bg-transparent' : 'bg-muted/[0.03]'}`}
@@ -242,10 +441,23 @@ function Vehicles() {
           </table>
         </div>
 
+        {/* ── Lazy load sentinel ── */}
+        {visibleCount < filtered.length && (
+          <div ref={sentinelRef} className="flex items-center justify-center py-4">
+            <div className="flex items-center gap-2 text-muted text-sm">
+              <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+              Loading more…
+            </div>
+          </div>
+        )}
+
         {/* ── Table footer ── */}
         <div className="px-5 py-3.5 border-t border-muted/10 flex items-center justify-between">
           <p className="text-xs text-muted">
-            Showing {filtered.length} of {VEHICLES_DATA.length} vehicles
+            Showing {Math.min(visibleCount, filtered.length)} of {filtered.length} vehicles
           </p>
           <div className="text-xs text-muted/60">
             Last updated: {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -254,7 +466,7 @@ function Vehicles() {
       </div>
 
       {/* ── Vehicle Modal ── */}
-      <VehicleModal isOpen={vehicleModalOpen} onClose={() => setVehicleModalOpen(false)} />
+      <VehicleModal isOpen={vehicleModalOpen} onClose={() => setVehicleModalOpen(false)} onSubmit={handleAddVehicle} />
     </div>
   );
 }

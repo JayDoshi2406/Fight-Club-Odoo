@@ -31,7 +31,7 @@ const initialForm = {
   acquisitionCost: '',
 };
 
-function VehicleModal({ isOpen, onClose }) {
+function VehicleModal({ isOpen, onClose, onSubmit }) {
   const [formData, setFormData] = useState(initialForm);
   const [errors, setErrors] = useState({});
   const [citySearch, setCitySearch] = useState('');
@@ -79,8 +79,7 @@ function VehicleModal({ isOpen, onClose }) {
       setErrors(newErrors);
       return;
     }
-    // TODO: API call to create vehicle
-    console.log('New Vehicle:', formData);
+    if (onSubmit) onSubmit(formData);
     setFormData(initialForm);
     setCitySearch('');
     setErrors({});

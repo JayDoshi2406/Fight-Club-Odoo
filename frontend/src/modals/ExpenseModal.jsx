@@ -8,7 +8,7 @@ const initialForm = {
   cost: '',
 };
 
-function ExpenseModal({ isOpen, onClose }) {
+function ExpenseModal({ isOpen, onClose, onSubmit }) {
   const [formData, setFormData] = useState(initialForm);
   const [errors, setErrors] = useState({});
 
@@ -38,8 +38,7 @@ function ExpenseModal({ isOpen, onClose }) {
       setErrors(newErrors);
       return;
     }
-    // TODO: API call to create expense
-    console.log('New Expense:', formData);
+    if (onSubmit) onSubmit(formData);
     setFormData(initialForm);
     setErrors({});
     onClose();
