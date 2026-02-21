@@ -1,0 +1,14 @@
+/* ========================================
+   Fleet Flow — Design Tokens / Constants
+   ========================================
+   All theme colors used across the app.
+   Referenced via Tailwind custom colors:
+     e.g.  bg-primary, text-accent, border-secondary
+   ======================================== */
+
+@theme {
+  --color-primary: #25343F;
+  --color-secondary: #FF9B51;
+  --color-accent: #EAEFEF;
+  --color-muted: #BFC9D1;
+}
