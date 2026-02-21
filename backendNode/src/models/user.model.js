@@ -24,6 +24,7 @@ const userSchema = new Schema(
             type: String,
             enum: ["Fleet Manager", "Dispatcher", "Safety Office", "Financial Analyst"],
             required: true,
+            trim: true,
         },
         refreshToken: {
             type: String,
