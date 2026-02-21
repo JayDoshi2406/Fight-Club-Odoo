@@ -42,25 +42,25 @@ function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#5F7161] to-[#6D8B74] px-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary to-secondary px-4">
       <div className="w-full max-w-md">
         {/* Logo / Brand */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[#EFEAD8] mb-4">
-            <svg className="w-8 h-8 text-[#5F7161]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-accent mb-4">
+            <svg className="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
             </svg>
           </div>
-          <h1 className="text-3xl font-bold text-[#EFEAD8]">Welcome Back</h1>
-          <p className="text-[#D0C9C0] mt-2">Sign in to your fleet management account</p>
+          <h1 className="text-3xl font-bold text-accent">Welcome Back</h1>
+          <p className="text-muted mt-2">Sign in to your fleet management account</p>
         </div>
 
         {/* Card */}
-        <div className="bg-[#5F7161]/80 backdrop-blur-sm border border-[#6D8B74] rounded-2xl p-8 shadow-xl">
+        <div className="bg-primary/80 backdrop-blur-sm border border-secondary rounded-2xl p-8 shadow-xl">
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Email */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-[#EFEAD8] mb-1.5">
+              <label htmlFor="email" className="block text-sm font-medium text-accent mb-1.5">
                 Email Address
               </label>
               <input
@@ -71,8 +71,8 @@ function Login() {
                 value={formData.email}
                 onChange={handleChange}
                 placeholder="you@company.com"
-                className={`w-full px-4 py-2.5 bg-[#6D8B74]/30 border rounded-lg text-[#EFEAD8] placeholder-[#D0C9C0] focus:outline-none focus:ring-2 focus:ring-[#EFEAD8] focus:border-transparent transition ${
-                  errors.email ? 'border-red-500' : 'border-[#6D8B74]'
+                className={`w-full px-4 py-2.5 bg-secondary/30 border rounded-lg text-accent placeholder-muted focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition ${
+                  errors.email ? 'border-red-500' : 'border-secondary'
                 }`}
               />
               {errors.email && <p className="text-red-400 text-sm mt-1">{errors.email}</p>}
@@ -80,7 +80,7 @@ function Login() {
 
             {/* Password */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-[#EFEAD8] mb-1.5">
+              <label htmlFor="password" className="block text-sm font-medium text-accent mb-1.5">
                 Password
               </label>
               <div className="relative">
@@ -92,14 +92,14 @@ function Login() {
                   value={formData.password}
                   onChange={handleChange}
                   placeholder="••••••••"
-                  className={`w-full px-4 py-2.5 pr-12 bg-[#6D8B74]/30 border rounded-lg text-[#EFEAD8] placeholder-[#D0C9C0] focus:outline-none focus:ring-2 focus:ring-[#EFEAD8] focus:border-transparent transition ${
-                    errors.password ? 'border-red-500' : 'border-[#6D8B74]'
+                  className={`w-full px-4 py-2.5 pr-12 bg-secondary/30 border rounded-lg text-accent placeholder-muted focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition ${
+                    errors.password ? 'border-red-500' : 'border-secondary'
                   }`}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword((prev) => !prev)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#D0C9C0] hover:text-[#EFEAD8] transition"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-accent transition"
                 >
                   {showPassword ? (
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -121,11 +121,11 @@ function Login() {
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="checkbox"
-                  className="w-4 h-4 rounded border-[#6D8B74] bg-[#6D8B74]/30 text-[#EFEAD8] focus:ring-[#EFEAD8] focus:ring-offset-0"
+                  className="w-4 h-4 rounded border-secondary bg-secondary/30 text-accent focus:ring-accent focus:ring-offset-0"
                 />
-                <span className="text-sm text-[#D0C9C0]">Remember me</span>
+                <span className="text-sm text-muted">Remember me</span>
               </label>
-              <a href="#" className="text-sm text-[#EFEAD8] hover:text-[#D0C9C0] transition">
+              <a href="#" className="text-sm text-accent hover:text-muted transition">
                 Forgot password?
               </a>
             </div>
@@ -133,7 +133,7 @@ function Login() {
             {/* Submit */}
             <button
               type="submit"
-              className="w-full py-2.5 bg-[#6D8B74] hover:bg-[#6D8B74]/90 text-[#EFEAD8] font-semibold rounded-lg transition focus:outline-none focus:ring-2 focus:ring-[#EFEAD8] focus:ring-offset-2 focus:ring-offset-transparent"
+              className="w-full py-2.5 bg-secondary hover:bg-secondary/90 text-accent font-semibold rounded-lg transition focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-transparent"
             >
               Sign In
             </button>
@@ -141,9 +141,9 @@ function Login() {
 
           {/* Divider */}
           <div className="mt-6 text-center">
-            <p className="text-[#D0C9C0] text-sm">
+            <p className="text-muted text-sm">
               Don&apos;t have an account?{' '}
-              <Link to="/signup" className="text-[#EFEAD8] hover:text-[#D0C9C0] font-medium transition">
+              <Link to="/signup" className="text-accent hover:text-muted font-medium transition">
                 Create one
               </Link>
             </p>

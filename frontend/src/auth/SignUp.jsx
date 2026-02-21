@@ -66,25 +66,25 @@ function SignUp() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#5F7161] to-[#6D8B74] px-4 py-10">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary to-secondary px-4 py-10">
       <div className="w-full max-w-md">
         {/* Logo / Brand */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[#EFEAD8] mb-4">
-            <svg className="w-8 h-8 text-[#5F7161]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-accent mb-4">
+            <svg className="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
             </svg>
           </div>
-          <h1 className="text-3xl font-bold text-[#EFEAD8]">Create Account</h1>
-          <p className="text-[#D0C9C0] mt-2">Join the fleet management platform</p>
+          <h1 className="text-3xl font-bold text-accent">Create Account</h1>
+          <p className="text-muted mt-2">Join the fleet management platform</p>
         </div>
 
         {/* Card */}
-        <div className="bg-[#5F7161]/80 backdrop-blur-sm border border-[#6D8B74] rounded-2xl p-8 shadow-xl">
+        <div className="bg-primary/80 backdrop-blur-sm border border-secondary rounded-2xl p-8 shadow-xl">
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Name */}
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-[#EFEAD8] mb-1.5">
+              <label htmlFor="name" className="block text-sm font-medium text-accent mb-1.5">
                 Full Name
               </label>
               <input
@@ -95,8 +95,8 @@ function SignUp() {
                 value={formData.name}
                 onChange={handleChange}
                 placeholder="John Doe"
-                className={`w-full px-4 py-2.5 bg-[#6D8B74]/30 border rounded-lg text-[#EFEAD8] placeholder-[#D0C9C0] focus:outline-none focus:ring-2 focus:ring-[#EFEAD8] focus:border-transparent transition ${
-                  errors.name ? 'border-red-500' : 'border-[#6D8B74]'
+                className={`w-full px-4 py-2.5 bg-secondary/30 border rounded-lg text-accent placeholder-muted focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition ${
+                  errors.name ? 'border-red-500' : 'border-secondary'
                 }`}
               />
               {errors.name && <p className="text-red-400 text-sm mt-1">{errors.name}</p>}
@@ -104,7 +104,7 @@ function SignUp() {
 
             {/* Email */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-[#EFEAD8] mb-1.5">
+              <label htmlFor="email" className="block text-sm font-medium text-accent mb-1.5">
                 Email Address
               </label>
               <input
@@ -115,8 +115,8 @@ function SignUp() {
                 value={formData.email}
                 onChange={handleChange}
                 placeholder="you@company.com"
-                className={`w-full px-4 py-2.5 bg-[#6D8B74]/30 border rounded-lg text-[#EFEAD8] placeholder-[#D0C9C0] focus:outline-none focus:ring-2 focus:ring-[#EFEAD8] focus:border-transparent transition ${
-                  errors.email ? 'border-red-500' : 'border-[#6D8B74]'
+                className={`w-full px-4 py-2.5 bg-secondary/30 border rounded-lg text-accent placeholder-muted focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition ${
+                  errors.email ? 'border-red-500' : 'border-secondary'
                 }`}
               />
               {errors.email && <p className="text-red-400 text-sm mt-1">{errors.email}</p>}
@@ -124,7 +124,7 @@ function SignUp() {
 
             {/* Role */}
             <div>
-              <label htmlFor="role" className="block text-sm font-medium text-[#EFEAD8] mb-1.5">
+              <label htmlFor="role" className="block text-sm font-medium text-accent mb-1.5">
                 Role
               </label>
               <select
@@ -132,15 +132,15 @@ function SignUp() {
                 name="role"
                 value={formData.role}
                 onChange={handleChange}
-                className={`w-full px-4 py-2.5 bg-[#6D8B74]/30 border rounded-lg text-[#EFEAD8] focus:outline-none focus:ring-2 focus:ring-[#EFEAD8] focus:border-transparent transition appearance-none cursor-pointer ${
-                  errors.role ? 'border-red-500' : 'border-[#6D8B74]'
-                } ${!formData.role ? 'text-[#D0C9C0]' : ''}`}
+                className={`w-full px-4 py-2.5 bg-secondary/30 border rounded-lg text-accent focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition appearance-none cursor-pointer ${
+                  errors.role ? 'border-red-500' : 'border-secondary'
+                } ${!formData.role ? 'text-muted' : ''}`}
               >
                 <option value="" disabled>
                   Select your role
                 </option>
                 {ROLES.map((role) => (
-                  <option key={role} value={role} className="bg-[#5F7161] text-[#EFEAD8]">
+                  <option key={role} value={role} className="bg-primary text-accent">
                     {role}
                   </option>
                 ))}
@@ -150,7 +150,7 @@ function SignUp() {
 
             {/* Password */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-[#EFEAD8] mb-1.5">
+              <label htmlFor="password" className="block text-sm font-medium text-accent mb-1.5">
                 Password
               </label>
               <div className="relative">
@@ -162,14 +162,14 @@ function SignUp() {
                   value={formData.password}
                   onChange={handleChange}
                   placeholder="••••••••"
-                  className={`w-full px-4 py-2.5 pr-12 bg-[#6D8B74]/30 border rounded-lg text-[#EFEAD8] placeholder-[#D0C9C0] focus:outline-none focus:ring-2 focus:ring-[#EFEAD8] focus:border-transparent transition ${
-                    errors.password ? 'border-red-500' : 'border-[#6D8B74]'
+                  className={`w-full px-4 py-2.5 pr-12 bg-secondary/30 border rounded-lg text-accent placeholder-muted focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition ${
+                    errors.password ? 'border-red-500' : 'border-secondary'
                   }`}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword((prev) => !prev)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#D0C9C0] hover:text-[#EFEAD8] transition"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-accent transition"
                 >
                   {showPassword ? (
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -188,7 +188,7 @@ function SignUp() {
 
             {/* Confirm Password */}
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-[#EFEAD8] mb-1.5">
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-accent mb-1.5">
                 Confirm Password
               </label>
               <div className="relative">
@@ -200,14 +200,14 @@ function SignUp() {
                   value={formData.confirmPassword}
                   onChange={handleChange}
                   placeholder="••••••••"
-                  className={`w-full px-4 py-2.5 pr-12 bg-[#6D8B74]/30 border rounded-lg text-[#EFEAD8] placeholder-[#D0C9C0] focus:outline-none focus:ring-2 focus:ring-[#EFEAD8] focus:border-transparent transition ${
-                    errors.confirmPassword ? 'border-red-500' : 'border-[#6D8B74]'
+                  className={`w-full px-4 py-2.5 pr-12 bg-secondary/30 border rounded-lg text-accent placeholder-muted focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition ${
+                    errors.confirmPassword ? 'border-red-500' : 'border-secondary'
                   }`}
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirm((prev) => !prev)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#D0C9C0] hover:text-[#EFEAD8] transition"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-accent transition"
                 >
                   {showConfirm ? (
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -229,7 +229,7 @@ function SignUp() {
             {/* Submit */}
             <button
               type="submit"
-              className="w-full py-2.5 bg-[#6D8B74] hover:bg-[#6D8B74]/90 text-[#EFEAD8] font-semibold rounded-lg transition focus:outline-none focus:ring-2 focus:ring-[#EFEAD8] focus:ring-offset-2 focus:ring-offset-transparent"
+              className="w-full py-2.5 bg-secondary hover:bg-secondary/90 text-accent font-semibold rounded-lg transition focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-transparent"
             >
               Create Account
             </button>
@@ -237,9 +237,9 @@ function SignUp() {
 
           {/* Divider */}
           <div className="mt-6 text-center">
-            <p className="text-[#D0C9C0] text-sm">
+            <p className="text-muted text-sm">
               Already have an account?{' '}
-              <Link to="/login" className="text-[#EFEAD8] hover:text-[#D0C9C0] font-medium transition">
+              <Link to="/login" className="text-accent hover:text-muted font-medium transition">
                 Sign in
               </Link>
             </p>
