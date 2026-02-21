@@ -17,7 +17,15 @@ app.use(express.static("public"));
 app.use(cookieParser());
 
 import userRouter from "./routes/user.routes.js";
+import tripRouter from "./routes/trip.routes.js";
+import maintenanceRouter from "./routes/maintenance.routes.js";
+import expenseRouter from "./routes/expense.routes.js";
+import analyticsRouter from "./routes/analytics.routes.js";
 
 app.use("/api/v1/users", userRouter);
+app.use("/api/trips", tripRouter);
+app.use("/api/maintenance", maintenanceRouter);
+app.use("/api/expenses", expenseRouter);
+app.use("/api/analytics", analyticsRouter);
 
 export { app };

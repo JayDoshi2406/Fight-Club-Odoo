@@ -46,21 +46,21 @@ const registerUser = asyncHandler(async (req, res) => {
         throw new ApiError(409, "User with given email already exists");
     }
 
-    const imageLocalPath = req.files?.image
-        ? req.files?.image[0]?.path
-        : null;
+    const imageLocalPath = req.file?.path;
 
-    const image = "hsuygdvz";
+    let image_url = "https://i.pinimg.com/736x/0a/07/2f/0a072f4a37c989255e93918bd9e879ae.jpg";
 
-    if (imageLocalPath)
-        image = await uploadOnCloudinary(imageLocalPath);
+    if (imageLocalPath){
+        const image = await uploadOnCloudinary(imageLocalPath);
+        image_url = image.url;
+    }
 
     const user = await User.create({
         name,
         email,
         password,
         role,
-        image,
+        image: image_url,
     });
 
     const createdUser = await User.findById(user._id).select(
