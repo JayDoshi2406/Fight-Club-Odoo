@@ -13,6 +13,10 @@ const vehicleSchema = new Schema(
             required: true,
             trim: true,
         },
+        image: {
+            type: String,
+            required: true,
+        },
         licensePlate: {
             type: String,
             required: true,
