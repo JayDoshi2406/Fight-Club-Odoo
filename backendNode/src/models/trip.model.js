@@ -21,6 +21,8 @@ const tripSchema = new Schema(
             enum: ["Draft", "Dispatched", "Completed", "Cancelled"],
             default: "Draft",
         },
+        startRegion: { type: String, required: true },
+        endRegion: { type: String, required: true },
         startOdometer: { type: Number },
         finalOdometer: { type: Number },
         dispatchedAt: { type: Date },
