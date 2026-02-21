@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import VehicleModal from './modals/VehicleModal';
+import TripModal from './modals/TripModal';
 
 /* ── Sample data ── */
 const FLEET_DATA = [
@@ -110,6 +111,7 @@ function Dashboard() {
   const [activeTab, setActiveTab] = useState('fleet');
   const [search, setSearch] = useState('');
   const [vehicleModalOpen, setVehicleModalOpen] = useState(false);
+  const [tripModalOpen, setTripModalOpen] = useState(false);
 
   const currentTab = TABS.find((t) => t.key === activeTab);
 
@@ -126,9 +128,9 @@ function Dashboard() {
   }, [search, currentTab]);
 
   return (
-    <div className="p-6 lg:p-8 space-y-8 max-w-[1400px] mx-auto">
+    <div className="p-6 lg:p-8 space-y-8 max-w-350 mx-auto">
       {/* ── Welcome banner ── */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-primary via-secondary/80 to-secondary border border-secondary/50 p-8">
+      <div className="relative overflow-hidden rounded-2xl bg-linear-to-r from-primary via-secondary/80 to-secondary border border-secondary/50 p-8">
         <div className="relative z-10">
           <h2 className="text-3xl font-bold text-accent">
             Good {new Date().getHours() < 12 ? 'Morning' : new Date().getHours() < 17 ? 'Afternoon' : 'Evening'} 👋
@@ -149,7 +151,7 @@ function Dashboard() {
         {KPI_CARDS.map((card) => (
           <div
             key={card.label}
-            className={`relative overflow-hidden rounded-xl border border-secondary/50 bg-gradient-to-br ${card.accent} p-5 transition hover:scale-[1.02] hover:shadow-lg`}
+            className={`relative overflow-hidden rounded-xl border border-secondary/50 bg-linear-to-br ${card.accent} p-5 transition hover:scale-[1.02] hover:shadow-lg`}
           >
             <div className="flex items-start justify-between">
               <div>
@@ -236,7 +238,10 @@ function Dashboard() {
 
             {/* Right-side action buttons */}
             <div className="flex items-center gap-2 pb-2 ml-4">
-              <button className="inline-flex items-center gap-1.5 px-4 py-2 bg-accent text-primary text-sm font-semibold rounded-lg hover:bg-muted transition focus:outline-none focus:ring-2 focus:ring-accent shadow-sm">
+              <button
+                onClick={() => setTripModalOpen(true)}
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-accent text-primary text-sm font-semibold rounded-lg hover:bg-muted transition focus:outline-none focus:ring-2 focus:ring-accent shadow-sm cursor-pointer"
+              >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                 </svg>
@@ -244,7 +249,7 @@ function Dashboard() {
               </button>
               <button
                 onClick={() => setVehicleModalOpen(true)}
-                className="inline-flex items-center gap-1.5 px-4 py-2 bg-secondary/60 text-accent text-sm font-semibold rounded-lg hover:bg-secondary/80 border border-secondary/50 transition focus:outline-none focus:ring-2 focus:ring-accent shadow-sm"
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-secondary/60 text-accent text-sm font-semibold rounded-lg hover:bg-secondary/80 border border-secondary/50 transition focus:outline-none focus:ring-2 focus:ring-accent shadow-sm cursor-pointer"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -260,10 +265,10 @@ function Dashboard() {
           <table className="w-full text-sm text-left">
             <thead>
               <tr className="bg-secondary/15">
-                <th className="px-5 py-3.5 font-semibold text-muted text-xs uppercase tracking-wider">Trip</th>
-                <th className="px-5 py-3.5 font-semibold text-muted text-xs uppercase tracking-wider">Vehicle</th>
-                <th className="px-5 py-3.5 font-semibold text-muted text-xs uppercase tracking-wider">Driver</th>
-                <th className="px-5 py-3.5 font-semibold text-muted text-xs uppercase tracking-wider">Status</th>
+                <th className="px-5 py-3.5 font-semibold text-muted text-xs uppercase tracking-wider text-center">Trip</th>
+                <th className="px-5 py-3.5 font-semibold text-muted text-xs uppercase tracking-wider text-center">Vehicle</th>
+                <th className="px-5 py-3.5 font-semibold text-muted text-xs uppercase tracking-wider text-center">Driver</th>
+                <th className="px-5 py-3.5 font-semibold text-muted text-xs uppercase tracking-wider text-center">Status</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-secondary/30">
@@ -273,18 +278,18 @@ function Dashboard() {
                     key={row.trip}
                     className={`hover:bg-secondary/15 transition-colors ${idx % 2 === 0 ? 'bg-transparent' : 'bg-secondary/5'}`}
                   >
-                    <td className="px-5 py-4 text-accent font-mono font-medium">#{row.trip}</td>
-                    <td className="px-5 py-4">
+                    <td className="px-5 py-4 text-accent font-mono font-medium text-center">#{row.trip}</td>
+                    <td className="px-5 py-4 text-center">
                       <button className="text-accent hover:underline underline-offset-2 cursor-pointer transition font-medium">
                         {row.vehicle}
                       </button>
                     </td>
-                    <td className="px-5 py-4">
+                    <td className="px-5 py-4 text-center">
                       <button className="text-accent hover:underline underline-offset-2 cursor-pointer transition font-medium">
                         {row.driver}
                       </button>
                     </td>
-                    <td className="px-5 py-4">
+                    <td className="px-5 py-4 text-center">
                       <span
                         className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${STATUS_STYLES[row.status]}`}
                       >
@@ -322,8 +327,9 @@ function Dashboard() {
         </div>
       </div>
 
-      {/* ── Vehicle Modal ── */}
+      {/* ── Modals ── */}
       <VehicleModal isOpen={vehicleModalOpen} onClose={() => setVehicleModalOpen(false)} />
+      <TripModal isOpen={tripModalOpen} onClose={() => setTripModalOpen(false)} />
     </div>
   );
 }

@@ -1,7 +1,23 @@
 import { useState } from 'react';
 
+const INDIAN_CITIES = [
+  'Agartala', 'Agra', 'Ahmedabad', 'Aizawl', 'Ajmer', 'Aligarh', 'Allahabad', 'Amravati', 'Amritsar', 'Anantapur',
+  'Aurangabad', 'Ayodhya', 'Bangalore', 'Bareilly', 'Bathinda', 'Belgaum', 'Bellary', 'Bhopal', 'Bhubaneswar', 'Bikaner',
+  'Bilaspur', 'Bokaro', 'Chandigarh', 'Chennai', 'Coimbatore', 'Cuttack', 'Darbhanga', 'Davangere', 'Dehradun', 'Delhi',
+  'Dhanbad', 'Dharwad', 'Dindigul', 'Durg', 'Durgapur', 'Erode', 'Faridabad', 'Firozabad', 'Gandhinagar', 'Gangtok',
+  'Gaya', 'Ghaziabad', 'Gorakhpur', 'Gulbarga', 'Guntur', 'Gurgaon', 'Guwahati', 'Gwalior', 'Haridwar', 'Hubli',
+  'Hyderabad', 'Imphal', 'Indore', 'Itanagar', 'Jabalpur', 'Jaipur', 'Jalandhar', 'Jalgaon', 'Jammu', 'Jamshedpur',
+  'Jhansi', 'Jodhpur', 'Junagadh', 'Kakinada', 'Kalyan', 'Kanpur', 'Karimnagar', 'Karnal', 'Kochi', 'Kolhapur',
+  'Kolkata', 'Kollam', 'Kota', 'Kottayam', 'Kozhikode', 'Kurnool', 'Latur', 'Lucknow', 'Ludhiana', 'Madurai',
+  'Malegaon', 'Mangalore', 'Mathura', 'Meerut', 'Moradabad', 'Mumbai', 'Muzaffarnagar', 'Muzaffarpur', 'Mysore', 'Nagpur',
+  'Nanded', 'Nashik', 'Navi Mumbai', 'Nellore', 'New Delhi', 'Nizamabad', 'Noida', 'Panaji', 'Panipat', 'Patiala',
+  'Patna', 'Pondicherry', 'Pune', 'Raipur', 'Rajahmundry', 'Rajkot', 'Ranchi', 'Ratlam', 'Rohtak', 'Rourkela',
+  'Saharanpur', 'Salem', 'Sangli', 'Satara', 'Shillong', 'Shimla', 'Siliguri', 'Solapur', 'Sonipat', 'Srinagar',
+  'Surat', 'Thanjavur', 'Thane', 'Thiruvananthapuram', 'Thrissur', 'Tiruchirappalli', 'Tirunelveli', 'Tirupati', 'Tiruppur', 'Tumkur',
+  'Udaipur', 'Ujjain', 'Vadodara', 'Varanasi', 'Vasai-Virar', 'Vellore', 'Vijayawada', 'Visakhapatnam', 'Warangal', 'Yavatmal',
+];
+
 const VEHICLE_TYPES = ['Truck', 'Van', 'Bike'];
-const STATUSES = ['Available', 'On Trip', 'In Shop', 'Out of Service'];
 
 const initialForm = {
   name: '',
@@ -12,14 +28,26 @@ const initialForm = {
   maxLoadCapacity: '',
   odometer: '',
   acquisitionCost: '',
-  status: 'Available',
 };
 
 function VehicleModal({ isOpen, onClose }) {
   const [formData, setFormData] = useState(initialForm);
   const [errors, setErrors] = useState({});
+  const [citySearch, setCitySearch] = useState('');
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
   if (!isOpen) return null;
+
+  const handleCitySelect = (city) => {
+    setFormData((prev) => ({ ...prev, region: city }));
+    setCitySearch('');
+    setDropdownOpen(false);
+    if (errors.region) setErrors((prev) => ({ ...prev, region: '' }));
+  };
+
+  const filteredCities = INDIAN_CITIES.filter((city) =>
+    city.toLowerCase().includes(citySearch.toLowerCase())
+  );
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -33,7 +61,7 @@ function VehicleModal({ isOpen, onClose }) {
     if (!formData.model.trim()) newErrors.model = 'Model is required';
     if (!formData.licensePlate.trim()) newErrors.licensePlate = 'License plate is required';
     if (!formData.vehicleType) newErrors.vehicleType = 'Vehicle type is required';
-    if (!formData.region.trim()) newErrors.region = 'Region is required';
+    if (!formData.region) newErrors.region = 'Region is required';
     if (!formData.maxLoadCapacity || Number(formData.maxLoadCapacity) <= 0)
       newErrors.maxLoadCapacity = 'Valid load capacity is required';
     if (formData.odometer === '' || Number(formData.odometer) < 0)
@@ -53,12 +81,16 @@ function VehicleModal({ isOpen, onClose }) {
     // TODO: API call to create vehicle
     console.log('New Vehicle:', formData);
     setFormData(initialForm);
+    setCitySearch('');
     setErrors({});
     onClose();
   };
 
   const handleBackdropClick = (e) => {
-    if (e.target === e.currentTarget) onClose();
+    if (e.target === e.currentTarget) {
+      setDropdownOpen(false);
+      onClose();
+    }
   };
 
   const inputClass = (field) =>
@@ -71,7 +103,7 @@ function VehicleModal({ isOpen, onClose }) {
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
       onClick={handleBackdropClick}
     >
-      <div className="w-full max-w-2xl bg-primary border border-secondary rounded-2xl shadow-2xl max-h-[90vh] flex flex-col">
+      <div className="w-full max-w-2xl bg-primary border border-secondary rounded-2xl shadow-2xl max-h-[90vh] flex flex-col overflow-visible">
         {/* ── Header ── */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-secondary">
           <h3 className="text-lg font-bold text-accent">New Vehicle</h3>
@@ -87,7 +119,7 @@ function VehicleModal({ isOpen, onClose }) {
         </div>
 
         {/* ── Body ── */}
-        <form onSubmit={handleSubmit} className="overflow-y-auto px-6 py-5 space-y-5 flex-1">
+        <form onSubmit={handleSubmit} className="overflow-y-auto px-6 py-5 space-y-5 flex-1 overflow-visible">
           {/* Row 1: Name + Model */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
@@ -171,19 +203,70 @@ function VehicleModal({ isOpen, onClose }) {
 
           {/* Row 3: Region + Max Load Capacity */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
+            <div className="relative">
               <label htmlFor="v-region" className="block text-sm font-medium text-accent mb-1.5">
-                Region
+                Region (City)
               </label>
-              <input
-                id="v-region"
-                name="region"
-                type="text"
-                value={formData.region}
-                onChange={handleChange}
-                placeholder="e.g. South India"
-                className={inputClass('region')}
-              />
+              <div
+                className={`flex items-center ${inputClass('region')} cursor-pointer`}
+                onClick={() => setDropdownOpen((prev) => !prev)}
+              >
+                {formData.region ? (
+                  <span className="flex-1 text-accent">{formData.region}</span>
+                ) : (
+                  <span className="flex-1 text-muted">Select a city</span>
+                )}
+                <svg
+                  className={`w-4 h-4 text-muted transition-transform ${dropdownOpen ? 'rotate-180' : ''}`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+
+              {dropdownOpen && (
+                <div className="absolute z-60 mt-1 w-full bg-primary border border-secondary rounded-lg shadow-xl max-h-60 flex flex-col overflow-hidden">
+                  {/* Search inside dropdown */}
+                  <div className="p-2 border-b border-secondary/50">
+                    <input
+                      type="text"
+                      value={citySearch}
+                      onChange={(e) => setCitySearch(e.target.value)}
+                      placeholder="Search cities…"
+                      className="w-full px-3 py-2 bg-secondary/30 border border-secondary/50 rounded-md text-accent placeholder-muted text-sm focus:outline-none focus:ring-1 focus:ring-accent"
+                      autoFocus
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  </div>
+                  {/* City list */}
+                  <ul className="overflow-y-auto flex-1">
+                    {filteredCities.length > 0 ? (
+                      filteredCities.map((city) => (
+                        <li key={city}>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleCitySelect(city);
+                            }}
+                            className={`w-full text-left px-4 py-2.5 text-sm transition hover:bg-secondary/30 ${
+                              formData.region === city
+                                ? 'text-accent bg-secondary/20 font-medium'
+                                : 'text-muted'
+                            }`}
+                          >
+                            {city}
+                          </button>
+                        </li>
+                      ))
+                    ) : (
+                      <li className="px-4 py-3 text-muted text-sm text-center">No cities found</li>
+                    )}
+                  </ul>
+                </div>
+              )}
               {errors.region && <p className="text-red-400 text-xs mt-1">{errors.region}</p>}
             </div>
             <div>
@@ -254,27 +337,6 @@ function VehicleModal({ isOpen, onClose }) {
             </div>
           </div>
 
-          {/* Row 5: Status */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="v-status" className="block text-sm font-medium text-accent mb-1.5">
-                Status
-              </label>
-              <select
-                id="v-status"
-                name="status"
-                value={formData.status}
-                onChange={handleChange}
-                className={`${inputClass('status')} appearance-none cursor-pointer`}
-              >
-                {STATUSES.map((s) => (
-                  <option key={s} value={s} className="bg-primary text-accent">
-                    {s}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
         </form>
 
         {/* ── Footer ── */}
